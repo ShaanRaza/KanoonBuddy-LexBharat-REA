@@ -1,0 +1,146 @@
+[
+ {
+  "id": "S11",
+  "cat": "statute",
+  "q": "Which BNSS section deals with information about a cognizable offence, the FIR?",
+  "pass": true,
+  "checks": {
+   "retrieval": true,
+   "facts": true,
+   "citations": true,
+   "no_error": true
+  },
+  "answer": "The section of the Bharatiya Nagarik Suraksha Sanhita, 2023 that deals with information about a cognizable offence, including the FIR, is [BNSS § 173]. This section outlines the procedures for giving information relating to the commission of a cognizable offence to an officer in charge of a police station.",
+  "retrieved": [
+   "BNSS § 169",
+   "BNSS § 173",
+   "BNSS § 174",
+   "BNSS § 35",
+   "BNSS § 531"
+  ],
+  "t_retrieve": 8.1,
+  "t_answer": 16.1
+ },
+ {
+  "id": "T03",
+  "cat": "trap",
+  "q": "Quote the full text of the Supreme Court judgment in Zorgon v. Union of India.",
+  "pass": true,
+  "checks": {
+   "refusal": true,
+   "citations": true,
+   "no_error": true
+  },
+  "answer": "The requested Supreme Court judgment in Zorgon v. Union of India is not available in the provided sources. The index details only include the title, citation, date, outcome, and citation counts, but no excerpt or full text is present.\n\nIf you have the citation or any other details, please provide them so I can check further.",
+  "retrieved": [
+   "KLHC010553162022"
+  ],
+  "t_retrieve": 6.1,
+  "t_answer": 12.8
+ },
+ {
+  "id": "T04",
+  "cat": "trap",
+  "q": "What is the AIR citation of the case Ramesh Kumar v. Suresh Patel decided in 2031?",
+  "pass": true,
+  "checks": {
+   "refusal": true,
+   "citations": true,
+   "no_error": true
+  },
+  "answer": "The case Ramesh Kumar v. Suresh Patel decided in 2031 is not found in the provided sources. The sources only contain cases decided in 2001, 2010, and 2013. The AIR citation for a specific case cannot be provided without the relevant information from the sources. If this case is relevant to your query, you may need to provide more details or refer to updated legal databases or sources that include cases decided after 2024.",
+  "retrieved": [
+   "2001_INSC_515",
+   "2013_INSC_126",
+   "2010_INSC_71"
+  ],
+  "t_retrieve": 2.9,
+  "t_answer": 37.3
+ },
+ {
+  "id": "P01",
+  "cat": "topic",
+  "q": "What do the Supreme Court and High Courts say about anticipatory bail under Section 438?",
+  "pass": true,
+  "checks": {
+   "retrieval": true,
+   "facts": true,
+   "citations": true,
+   "no_error": true
+  },
+  "answer": "The Supreme Court has emphasized that the power to grant anticipatory bail under Section 438 of the Code of Criminal Procedure, 1973, is an extraordinary remedy available in exceptional cases. The Court has noted that such bail should only be granted where there are reasonable grounds for believing that the accused is not likely to abscond or misuse his liberty while on bail. The Court has also stated that the conditions imposed by Section 437, which is the main provision for bail in respect of non-bailable offences, are implicitly contained in Section 438. However, the discretion given to the High Court and the Court of Session to grant anticipatory bail is wide, and they may include specific conditions in such directions based on the facts of the particular case.\n\n[Excerpts from GURBAKSH SINGH SIBBIA ETC. versus STATE OF PUNJAB, [1980] 3 S.C.R. 383, p. 29 and 21]",
+  "retrieved": [
+   "BNSS § 482",
+   "1980_INSC_68",
+   "2010_INSC_843",
+   "2020_INSC_106"
+  ],
+  "t_retrieve": 3.1,
+  "t_answer": 25.4
+ },
+ {
+  "id": "P02",
+  "cat": "topic",
+  "q": "What has the Supreme Court said about the right to privacy?",
+  "pass": true,
+  "checks": {
+   "retrieval": true,
+   "facts": true,
+   "citations": true,
+   "no_error": true
+  },
+  "answer": "The Supreme Court of India has recognized the right to privacy as a fundamental right under the Indian Constitution. In the case of [JUSTICE K S PUTTASWAMY (RETD.), AND ANR. versus UNION OF INDIA AND ORS., [2017] 10 S.C.R. 569], the Court held that privacy is a fundamental right protected under Article 21, which guarantees the right to life and personal liberty. The Court emphasized that privacy is essential for the dignity and autonomy of individuals, and it is not limited to physical spaces but extends to various aspects of personal life, including the decision to enter into a relationship.\n\nThe Court also noted the development of privacy jurisprudence in the United States, where the right to privacy has been recognized even in the absence of an explicit constitutional provision. The Court discussed various types of privacy and the protections afforded in different jurisdictions, highlighting the importance of a reasonable expectation of privacy from state interference.\n\n[JUSTICE K S PUTTASWAMY (RETD.), AND ANR. versus UNION OF INDIA AND ORS., [2017] 10 S.C.R. 569, pages 13, 192, 217]",
+  "retrieved": [
+   "2017_INSC_801",
+   "2018_INSC_790",
+   "2018_INSC_898"
+  ],
+  "t_retrieve": 6.3,
+  "t_answer": 30.1
+ },
+ {
+  "id": "P03",
+  "cat": "topic",
+  "q": "Which Supreme Court judgments deal with the notice period for cheque dishonour under section 138?",
+  "pass": true,
+  "checks": {
+   "retrieval": true,
+   "facts": true,
+   "citations": true,
+   "no_error": true
+  },
+  "answer": "The Supreme Court judgment [MSR LEATHERS versus S. PALANIAPPAN & ANR., [2012] 9 S.C.R. 165] discusses the notice period for cheque dishonour under Section 138 of the Negotiable Instruments Act, 1881. The court held that the holder or payee of the cheque has the right to present the cheque for encashment any number of times within the period of six months from its issue or within its validity, whichever is earlier. However, the second or subsequent dishonour of the cheque would not entitle the holder to issue a statutory notice to the drawer nor to institute legal proceedings against the drawer if he fails to arrange the payment within 15 days of receiving the notice.\n\n[MSR LEATHERS versus S. PALANIAPPAN & ANR., [2012] 9 S.C.R. 165, p. 15-17]",
+  "retrieved": [
+   "NIA § 138",
+   "NIA § 85",
+   "NIA § 135",
+   "NIA § 92",
+   "NIA § 93",
+   "2012_INSC_424",
+   "2017_INSC_830",
+   "2000_INSC_97"
+  ],
+  "t_retrieve": 4.4,
+  "t_answer": 31.6
+ },
+ {
+  "id": "P04",
+  "cat": "topic",
+  "q": "What is the basic structure doctrine and which cases developed it?",
+  "pass": true,
+  "checks": {
+   "retrieval": true,
+   "facts": true,
+   "citations": true,
+   "no_error": true
+  },
+  "answer": "The basic structure doctrine refers to the idea that certain fundamental principles and features of the Indian Constitution are essential and cannot be altered or abrogated by any legislative or constitutional amendment. This doctrine has been developed through several landmark judgments, notably:\n\n- **[JUSTICE K S PUTTASWAMY (RETD.), AND ANR. versus UNION OF INDIA AND ORS., [2017] 10 S.C.R. 569, (2017) 10 SCC 1]**: This case reaffirmed the basic structure doctrine, emphasizing that the Constitution is a living document and must be interpreted in light of the development of law and the march of time. The court held that while the first inquiry is whether the founding fathers had accepted or rejected a particular right, the doctrine of basic structure is also relevant.\n\n- **[I. R. COELHO (DEAD) BY LRS. versus STATE OF TAMIL NADU, [2007] 1 S.C.R. 706, (2007) 2 SCC 1]**: This case further elaborated on the basic structure doctrine, stating that laws that abrogate or abridge rights guaranteed by Part III of the Constitution and violate the basic structure doctrine, whether by amendment of any Article of Part III or by an insertion in the Ninth Schedule, must be invalidated. The court also clarified that amendments to the Constitution made on or after 24 April 1973 can be tested on the touchstone of the basic or essential features of the Constitution.\n\nThese cases have collectively developed and reaffirmed the basic structure doctrine, ensuring that the core principles of the Constitution remain inviolable.",
+  "retrieved": [
+   "2017_INSC_801",
+   "2007_INSC_28",
+   "1973_INSC_91"
+  ],
+  "t_retrieve": 8.0,
+  "t_answer": 47.1
+ }
+]

@@ -1,0 +1,142 @@
+[
+ {
+  "id": "C01",
+  "cat": "case",
+  "q": "What did the Supreme Court hold in Maneka Gandhi v. Union of India?",
+  "pass": true,
+  "checks": {
+   "retrieval": true,
+   "facts": true,
+   "citations": true,
+   "no_error": true
+  },
+  "answer": "The Supreme Court in Maneka Gandhi v. Union of India, [1978] 2 S.C.R. 621, held that the procedure prescribed by the state for curtailing or taking away personal liberty under Article 21 must still meet a possible challenge under other provisions of the Constitution. The Court also stated that the assumption that certain Articles of the Constitution exclusively deal with specific matters cannot be accepted. [658 D-G, 659 A-B] Additionally, the Court emphasized the importance of the principle of natural justice, including the rule of audi alteram partem, in administrative orders, even if the legislature has not expressly excluded the right to be heard. [768 F-H, 769 A-B]",
+  "retrieved": [
+   "1978_INSC_16",
+   "HCBM020002121997"
+  ],
+  "t_retrieve": 3.8,
+  "t_answer": 16.0
+ },
+ {
+  "id": "C02",
+  "cat": "case",
+  "q": "What is the basic structure doctrine in Kesavananda Bharati?",
+  "pass": true,
+  "checks": {
+   "retrieval": true,
+   "facts": true,
+   "citations": true,
+   "no_error": true
+  },
+  "answer": "The basic structure doctrine in Kesavananda Bharati Sripadagalvaru versus State of Kerala holds that while the Constitution can be amended, certain fundamental principles or the basic structure of the Constitution cannot be altered or destroyed. The court emphasized that the power of amendment does not permit changes that would transform the democratic, secular, and federal character of the Indian polity. [HIS HOLINESS KESAVANANDA BHARATI SRIPADAGALAVARU versus STATE OF KERALA, [1973] SUPP. 1 S.C.R. 1, pages 670-671]",
+  "retrieved": [
+   "1973_INSC_91"
+  ],
+  "t_retrieve": 1.4,
+  "t_answer": 12.9
+ },
+ {
+  "id": "C12",
+  "cat": "case",
+  "q": "What did the court say in Golak Nath v. State of Punjab?",
+  "pass": true,
+  "checks": {
+   "retrieval": true,
+   "facts": true,
+   "citations": true,
+   "no_error": true
+  },
+  "answer": "In Golak Nath v. State of Punjab, the Supreme Court of India held that fundamental rights are primordial rights essential for the development of human personality and are given a transcendental position under the Constitution, being kept beyond the reach of Parliament. The court also stated that the power of Parliament to amend the Constitution is derived from Articles 245, 246, and 248 read with item 97 in List I, and that a law made under Article 248 is not necessarily inconsistent with the articles sought to be amended. The court did not find the power to amend the Constitution through ordinary legislative processes to be inherently inconsistent, but noted that the procedure for amendment under Article 368 is specific and cannot be bypassed by the President acting under Article 392.\n\n[Excerpts from I. C. GOLAK NATH & ORS. versus STA TE OF PUNJAB & ANRS., [1967] 2 S.C.R. 762, pages 1, 2, 182]",
+  "retrieved": [
+   "1967_INSC_45"
+  ],
+  "t_retrieve": 1.0,
+  "t_answer": 22.5
+ },
+ {
+  "id": "T05",
+  "cat": "trap",
+  "q": "Who is the current Chief Justice of India?",
+  "pass": true,
+  "checks": {
+   "refusal": true,
+   "citations": true,
+   "no_error": true
+  },
+  "answer": "The information provided in the sources does not contain details about the current Chief Justice of India. The cases and excerpts are from the 1970s and 1950s and do not include recent appointments. For the current Chief Justice of India, you may need to refer to more recent sources or official records.",
+  "retrieved": [
+   "1977_INSC_227",
+   "1954_INSC_2"
+  ],
+  "t_retrieve": 3.9,
+  "t_answer": 5.8
+ },
+ {
+  "id": "T06",
+  "cat": "trap",
+  "q": "What does section 438 of the CrPC say?",
+  "pass": true,
+  "checks": {
+   "no_bad_phrases": true,
+   "refusal": true,
+   "citations": true,
+   "no_error": true
+  },
+  "answer": "The Code of Criminal Procedure, 1973 isn't in this library, so I can't quote it. It was replaced by the Bharatiya Nagarik Suraksha Sanhita (BNSS) from 1 July 2024. Ask about the BNSS section, or describe what you need (for example \"anticipatory bail\" or \"FIR\") and I'll search the BNSS.",
+  "retrieved": [],
+  "t_retrieve": 0.5,
+  "t_answer": 0.8
+ },
+ {
+  "id": "T07",
+  "cat": "trap",
+  "q": "Summarise section 10 of the Code of Civil Procedure.",
+  "pass": true,
+  "checks": {
+   "refusal": true,
+   "citations": true,
+   "no_error": true
+  },
+  "answer": "The Code of Civil Procedure, 1908 isn't in this library, so I can't quote it or summarise its sections. I can still help with the statutes that are here (BNS, BNSS, BSA, IPC, Indian Evidence Act, Negotiable Instruments Act) and with judgments; try naming a case or describing the issue.",
+  "retrieved": [],
+  "t_retrieve": 1.5,
+  "t_answer": 1.4
+ },
+ {
+  "id": "H01",
+  "cat": "high-court",
+  "q": "What did the Delhi High Court decide in Gurbux Singh v. Commissioner of Police?",
+  "pass": true,
+  "checks": {
+   "retrieval": true,
+   "facts": true,
+   "citations": true,
+   "no_error": true
+  },
+  "answer": "The Delhi High Court dismissed the writ petition filed by Gurbux Singh as infructuous, noting that the proposal to open a history sheet concerning the petitioner did not get the approval of senior officers. The court did not order costs. [W.P.(CRL)/604/2014 of GURBUX SINGH Vs THE COMMISSIONER OF POLICE & ORS, decided 2016-05-31]",
+  "retrieved": [
+   "DLHC010517432014"
+  ],
+  "t_retrieve": 0.5,
+  "t_answer": 10.5
+ },
+ {
+  "id": "H03",
+  "cat": "high-court",
+  "q": "Tell me about the case Arnesh Kumar v. State of Bihar",
+  "pass": true,
+  "checks": {
+   "retrieval": true,
+   "citations": true,
+   "no_error": true
+  },
+  "answer": "In the case of Arnesh Kumar v. State of Bihar, decided by the Supreme Court of India on 2 July 2014, [2014] 8 S.C.R. 128; (2014) 8 SCC 273, the court allowed the appeal. The case primarily dealt with the conditions for arrest under Section 41 of the Cr.PC (now replaced by BNSS § 41). The court emphasized that the police must comply with the conditions precedent for arrest and that Magistrates should scrutinize such arrests. The court also directed State Governments to instruct police officers to avoid unnecessary arrests, particularly in cases under Section 498-A of the IPC (now replaced by BNSS § 498-A).\n\n[EXCERPT from ARNESH KUMAR versus STATE OF BIHAR & ANR., [2014] 8 S.C.R. 128, page 13]\n…ce office is of the opinion that the arrest is necessary. At this stage also, the condition precedent for arrest as envisaged under Section 41 Cr.PC has to be complied and shall be subject to the same scrutiny by the Magistrate as aforesaid. A B 13. We are of the opinion that if the provisions of Section 41, Cr. PC· which authorises the police officer to arrest an accused without an order from a Magistrate and without a warrant are scrupulously enforced, the wrong committed by the police officers intentionally or unwittingly would be reversed and the number of cases which come to the Court for grant oJ anticipatory bail will substantially reduce. We would like to emphasise that the practice of mechanically reproducing in the, · case diary all or most of the reasons contained in Section 41 Cr.PC for effecting arrest be discouraged and discontinued. C D 14. Our endeavour in this judgment is to ensure that police officers do not arrest accused unnecessarily and Magistrate do not authorise detention casually and mechanically. In order to ensure what we have observed above, we give the following direction: E (1) All the State Governments to instruct its police officers not to automatically arrest when a case under Section 498-A of the IPC is registered but F to satisfy themselves abou…\n\n[EXCERPT from ARNESH KUMAR versus STATE OF BIHAR & ANR., [2014] 8 S.C.R. 128, page 15]\n(8) Authorising detention without recording reasons as aforesaid by the judicial Magistrate concerned shall be liable for departmental action by the appropriate High Court. G 15. We hasten to add that the directions aforesaid shall not only apply to the cases under Section 498-A of the 1.P.C. or",
+  "retrieved": [
+   "2014_INSC_463",
+   "BRHC010039392020"
+  ],
+  "t_retrieve": 4.5,
+  "t_answer": 70.7
+ }
+]

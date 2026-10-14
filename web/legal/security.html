@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark"><title>Security · LexBharat</title>
+<style>
+:root{--bg:#fafaf9;--fg:#1c1917;--mut:#6b6761;--line:#e7e5e4;--acc:#b04a12}
+@media (prefers-color-scheme:dark){:root{--bg:#141413;--fg:#f0eeeb;--mut:#a09b94;--line:#33312f;--acc:#f08a4b}}
+*{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--fg);font:17px/1.65 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:760px;margin:0 auto;padding:28px 18px 70px} a{color:var(--acc)}
+header a.brand{font:600 22px Georgia,serif;text-decoration:none;color:var(--fg)}
+nav{font-size:14px;color:var(--mut);margin:10px 0 26px;line-height:2} nav a[aria-current]{color:var(--fg);font-weight:600;text-decoration:none}
+h1{font:600 32px/1.2 Georgia,serif;margin:0 0 4px} h2{font-size:20px;margin:30px 0 6px} .meta{color:var(--mut);font-size:14px;margin:0 0 22px}
+ul{padding-left:22px} li{margin:4px 0} .box{border:1px solid var(--line);border-radius:10px;padding:2px 16px;margin:16px 0}
+footer{margin-top:44px;color:var(--mut);font-size:14px;border-top:1px solid var(--line);padding-top:16px}
+</style></head><body><main>
+<header><a class="brand" href="/">LexBharat</a></header><nav aria-label="Legal pages"><a href="/terms-conditions">Terms of Service</a> · <a href="/privacy-policy">Privacy Policy</a> · <a href="/acceptable-use">Acceptable Use</a> · <a href="/refund-policy">Refund Policy</a> · <a href="/legal-notice">Legal Notice</a> · <a href="/security" aria-current=page>Security</a> · <a href="/delete-data">Delete your data</a></nav>
+<h1>Security</h1><p class="meta">Effective 14 October 2026</p>
+
+<p>This page says plainly what we do to protect your account and data, and what we do not claim.</p>
+<h2>What we do</h2>
+<ul>
+<li>Passwords are never stored as text. They are stored only as salted one-way hashes (scrypt).</li>
+<li>Sign-in uses signed tokens that expire. Logging out, changing your password or disabling an account ends the sessions.</li>
+<li>Sign-in attempts are limited, and repeated failures lock the account for a while. Sign-up and password-reset emails are rate limited and their links work once and expire.</li>
+<li>Your chats and saved documents are visible only to your account.</li>
+<li>Connections are encrypted with HTTPS.</li>
+<li>Chats are deleted automatically after 180 days, and you can export or delete your data yourself.</li>
+<li>We do not run advertising or analytics trackers on the site.</li>
+</ul>
+<h2>What we do not claim</h2>
+<p>We do not hold third-party security certifications, and we have not yet had an independent security audit. No online service is perfectly secure.</p>
+<h2>Report a problem</h2>
+<p>If you find a security issue, please write to <a href="mailto:support@lexbharat.ai">support@lexbharat.ai</a> with the details. Give us reasonable time to fix it before you share it publicly. Please do not access other people's data while testing.</p>
+
+<footer>Questions? <a href="mailto:support@lexbharat.ai">support@lexbharat.ai</a>. LexBharat is a research aid and does not give legal advice.</footer>
+</main></body></html>

@@ -6,12 +6,14 @@ Everything outside the legal-data endpoints is stubbed so the saved front end lo
 import os
 import re
 import threading
+import time
 from pathlib import Path
 
 import duckdb
 from fastapi import Depends, FastAPI, HTTPException, Request
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import RedirectResponse, FileResponse, JSONResponse
 
+from server import topic
 from server import auth  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -22,6 +24,7 @@ JUDGMENT_COURTS = os.environ.get("JUDGMENT_COURTS", "supreme-court").split(",")
 COLLECTION = os.environ.get("QDRANT_COLLECTION", "legal_corpus_v2")
 CITATIONS_DB = ROOT / "data" / "citations.duckdb"
 PARALLEL_DB = ROOT / "data" / "parallel.duckdb"
+HC_DB = ROOT / "data" / "hc_cases.duckdb"
 
 # Short codes the front end uses (BNS, IPC ...) -> act_id in the legislation parquet.
 ACT_CODES = {
@@ -30,11 +33,10 @@ ACT_CODES = {
     "BSA": ("IND_central_20063", "Bharatiya Sakshya Adhiniyam, 2023"),
     "IPC": ("IND_REP_659_1860", "Indian Penal Code, 1860"),
     "IEA": ("IND_REP_971_1872", "Indian Evidence Act, 1872"),
-    "CPC": ("IND_central_2191", "Code of Civil Procedure, 1908"),
     "NIA": ("IND_central_2189", "Negotiable Instruments Act, 1881"),
 }
 REPEALED = {"IPC", "IEA"}  # superseded by BNS / BSA
-ALIASES = {"EVIDENCE": "IEA", "SAKSHYA": "BSA", "CRPC": "BNSS", "NI": "NIA", "NIACT": "NIA"}
+ALIASES = {"EVIDENCE": "IEA", "SAKSHYA": "BSA", "NI": "NIA", "NIACT": "NIA"}
 
 app = FastAPI(
     title="LexBharat",
@@ -46,16 +48,20 @@ app = FastAPI(
 @app.exception_handler(auth.AuthError)
 async def _auth_error(request: Request, exc: auth.AuthError):
     # {"error": ...} is the shape the front end reads; 401 makes it sign the user out
-    return JSONResponse({"error": exc.message}, status_code=exc.status, headers=exc.headers)
+    body = {"error": exc.message}
+    if exc.code:
+        body["code"] = exc.code
+    return JSONResponse(body, status_code=exc.status, headers=exc.headers)
 
 
 class SecurityHeaders:
     """Pure ASGI middleware (safe for streaming responses): hardening headers + request size cap."""
 
-    CSP = ("default-src 'self'; script-src 'self' 'unsafe-inline'; "
+    _TS = " https://challenges.cloudflare.com" if os.environ.get("TURNSTILE_SITE_KEY") else ""
+    CSP = ("default-src 'self'; script-src 'self' 'unsafe-inline'" + _TS + "; "
            "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
            "font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; "
-           "media-src 'self' blob: https:; connect-src 'self'; worker-src 'self' blob:; frame-src 'none'; "
+           "media-src 'self' blob: https:; connect-src 'self'; worker-src 'self' blob:; frame-src " + (_TS.strip() or "'none'") + "; "
            "frame-ancestors 'self'; base-uri 'self'; form-action 'self'; object-src 'none'")
     MAX_BODY = 1_000_000
 
@@ -108,7 +114,7 @@ class _DB:
 
 
 db = _DB()
-_ready = {"legislation": False, "cases": False, "citations": False}
+_ready = {"legislation": False, "cases": False, "citations": False, "hc": False}
 
 
 def _pq(name: str) -> str:
@@ -125,6 +131,53 @@ def load_legislation() -> None:
         WHERE act_id IN ({ids}) AND section_number IS NOT NULL AND section_number <> ''"""
     )
     _ready["legislation"] = True
+
+
+CLEAN: dict = {}        # (code, section number) -> verified section
+UNAVAILABLE: dict = {}  # code -> section numbers in the data that have no verified text
+
+
+_FIRST_NUMBERED = re.compile(r"\*\*\s*(\d+[A-Za-z]*)\s*[\.\)]")
+
+
+def _opens_with_number(body: str, num: str) -> bool:
+    """True if the first numbered heading in the text is this section's own number.
+
+    A chapter heading may come first (the first section of a chapter), but a different number coming
+    first means the row belongs to another provision (a schedule rule, an amendment, a stray fragment).
+    """
+    m = _FIRST_NUMBERED.search(body[:500])
+    return bool(m) and m.group(1).upper() == num.upper()
+
+
+def build_clean_sections() -> None:
+    """Keep only sections whose text we can vouch for.
+
+    The corpus holds several rows per section number (duplicates, schedule rules, amendments). For each
+    section we take its canonical rows (chunk id `..._sNNN` plus its own `_pN` parts) and require the text
+    to open with the section's own number. Anything else is treated as unavailable rather than guessed at.
+    """
+    CLEAN.clear(); UNAVAILABLE.clear()
+    code_by_id = {v[0]: k for k, v in ACT_CODES.items()}
+    groups, allnums = {}, {}
+    for act_id, num, cid, text, status, url in db.execute(
+            "SELECT act_id, section_number, chunk_id, text, act_status, source_url FROM leg WHERE section_type='section'").fetchall():
+        code = code_by_id.get(act_id)
+        if not code:
+            continue
+        allnums.setdefault(code, set()).add(num)
+        m = re.search(r"_s0*" + re.escape(num) + r"(?:_p(\d+))?$", cid, re.I)
+        if m:
+            groups.setdefault((code, num), []).append((int(m.group(1)) if m.group(1) is not None else -1, text, status, url))
+    for (code, num), parts in groups.items():
+        parts.sort(key=lambda p: p[0])
+        title, first = split_heading(parts[0][1])
+        if not _opens_with_number(first, num):
+            continue
+        CLEAN[(code, num)] = {"title": title, "text": "\n\n".join(split_heading(p[1])[1] for p in parts),
+                              "status": "repealed" if parts[0][2] == "repealed" else "in_force", "sourceUrl": parts[0][3]}
+    for code, nums in allnums.items():
+        UNAVAILABLE[code] = sorted((n for n in nums if (code, n) not in CLEAN), key=section_key)
 
 
 def load_cases() -> None:
@@ -146,6 +199,22 @@ def load_cases() -> None:
         _ready["cases"] = True
 
 
+def _housekeeping() -> None:
+    """Every day: finish account deletions whose grace period is over and drop chats past retention."""
+    import logging
+    while True:
+        try:
+            for uid in auth.due_for_deletion():
+                nyra.delete_user(uid)
+                editor.delete_user(uid)
+                auth.erase_user(uid)
+                logging.getLogger("lexbharat").info("erased an account whose deletion grace period ended")
+            nyra.purge_old()
+        except Exception:
+            logging.getLogger("lexbharat").exception("housekeeping failed")
+        time.sleep(24 * 3600)
+
+
 @app.on_event("startup")
 def startup() -> None:
     auth.init()  # raises if LEXBHARAT_SECRET is missing in production
@@ -153,6 +222,7 @@ def startup() -> None:
         print(f"WARNING: corpus not found at {CORPUS} - legal-data endpoints will 503")
         return
     load_legislation()
+    build_clean_sections()
     build_equivalents()
     load_cases()
     if CITATIONS_DB.exists():
@@ -161,12 +231,16 @@ def startup() -> None:
     if PARALLEL_DB.exists():  # AIR/SCC -> case map from build_parallel_citations.py
         db.execute(f"ATTACH '{PARALLEL_DB}' AS pc (READ_ONLY)")
         _ready["parallel"] = True
+    if HC_DB.exists():  # High Court case index from build_hc_index.py (metadata only)
+        db.execute(f"ATTACH '{HC_DB}' AS hc (READ_ONLY)")
+        _ready["hc"] = True
     # cited-by counts, used to rank search hits (empty table if the graph isn't built)
     if _ready["citations"]:
         db.execute("CREATE TABLE cited_counts AS SELECT cited, count(*) AS n FROM cg.edges GROUP BY cited")
     else:
         db.execute("CREATE TABLE cited_counts(cited VARCHAR, n BIGINT)")
     _ready["case_vectors"] = load_case_vectors()
+    threading.Thread(target=_housekeeping, daemon=True).start()
     print("ready:", _ready)
 
 
@@ -218,12 +292,10 @@ def statutes_list():
     need("legislation")
     out = []
     for code, (act_id, name) in ACT_CODES.items():
-        n, status = db.execute(
-            "SELECT count(DISTINCT section_number), any_value(act_status) FROM leg WHERE act_id=?",
-            [act_id],
-        ).fetchone()
+        n = sum(1 for (c, _) in CLEAN if c == code)
         out.append({"code": code, "fullName": name, "actId": act_id, "sectionCount": n,
-                    "status": "repealed" if status == "repealed" else "in_force"})
+                    "unavailableCount": len(UNAVAILABLE.get(code, [])),
+                    "status": "repealed" if code in REPEALED else "in_force"})
     return {"acts": out}
 
 
@@ -238,8 +310,7 @@ ACT_WORDS = {  # spelled-out act names -> short code
     "NEGOTIABLEINSTRUMENTSACT": "NIA", "NIACT": "NIA", "NI": "NIA",
     "INDIANPENALCODE": "IPC", "BHARATIYANYAYASANHITA": "BNS",
     "BHARATIYANAGARIKSURAKSHASANHITA": "BNSS", "BHARATIYASAKSHYAADHINIYAM": "BSA",
-    "INDIANEVIDENCEACT": "IEA", "EVIDENCEACT": "IEA", "CODEOFCIVILPROCEDURE": "CPC",
-    "CODEOFCRIMINALPROCEDURE": "BNSS", "CRPC": "BNSS",
+    "INDIANEVIDENCEACT": "IEA", "EVIDENCEACT": "IEA",
 }
 
 
@@ -256,13 +327,8 @@ _ACT_FIRST = re.compile(r"(?i)^\s*(.+?)\s+(?:section\s+|sec\.?\s*|s\.?\s*)?(\d+[
 
 
 def _section_hit(code: str, num: str):
-    r = db.execute("SELECT section_number, text FROM leg WHERE act_id=? AND section_number=? "
-                   "AND section_type='section' ORDER BY chunk_id LIMIT 1",
-                   [ACT_CODES[code][0], num]).fetchone()
-    if not r:
-        return None
-    title, body = split_heading(r[1])
-    return _hit(code, r[0], title, body)
+    d = CLEAN.get((code, num))
+    return _hit(code, num, d["title"], d["text"]) if d else None
 
 
 @app.get("/api/statutes/search")
@@ -296,21 +362,17 @@ def statutes_search(q: str = "", limit: int = 20):
     ql = SYNONYMS.get(q.lower(), q.lower())
     words = [w for w in re.findall(r"[a-z0-9]+", ql) if len(w) >= 3 or w.isdigit()]
     if words and not rows:
-        cond = " AND ".join("lower(text) LIKE ?" for _ in words)
-        res = db.execute(
-            f"SELECT act_id, section_number, text FROM leg WHERE section_type='section' AND {cond} "
-            "LIMIT 400", [f"%{w}%" for w in words]).fetchall()
-        by_id = {v[0]: k for k, v in ACT_CODES.items()}
         scored = []
-        for act_id, num, text in res:
-            title, body = split_heading(text)
-            tl, bl = title.lower(), body.lower()
+        for (code, num), d in CLEAN.items():
+            tl, bl = d["title"].lower(), d["text"].lower()
+            if not all(w in tl or w in bl for w in words):
+                continue
             score = sum(5 for w in words if w in tl) + sum(min(bl.count(w), 4) for w in words)
-            if act_id in (ACT_CODES["IPC"][0], ACT_CODES["IEA"][0]):
+            if code in REPEALED:
                 score -= 1  # repealed codes rank just below their replacements
-            scored.append((-score, len(body), act_id, num, title, body))
-        for _, _, act_id, num, title, body in sorted(scored)[:limit]:
-            rows.append(_hit(by_id[act_id], num, title, body))
+            scored.append((-score, len(bl), code, num, d))
+        for _, _, code, num, d in sorted(scored, key=lambda x: (x[0], x[1]))[:limit]:
+            rows.append(_hit(code, num, d["title"], d["text"]))
     seen, uniq = set(), []
     for r in rows:
         k = (r["actCode"], r["number"])
@@ -329,15 +391,12 @@ def _norm_title(t: str) -> str:
 
 
 def build_equivalents() -> None:
-    """Index section headings per code so IPC<->BNS and Evidence Act<->BSA can be paired."""
+    """Index verified section headings per code so IPC<->BNS and Evidence Act<->BSA can be paired."""
     for code in _EQ:
         idx: dict = {}
-        for num, text in db.execute(
-                "SELECT section_number, text FROM leg WHERE act_id=? AND section_type='section'",
-                [ACT_CODES[code][0]]).fetchall():
-            title, body = split_heading(text)
-            if BOLD_HEAD.search(body[:400]):  # only rows with a real heading
-                idx.setdefault(_norm_title(title), set()).add(num)
+        for (c, num), d in CLEAN.items():
+            if c == code:
+                idx.setdefault(_norm_title(d["title"]), set()).add(num)
         _title_idx[code] = idx
 
 
@@ -369,22 +428,12 @@ def statute_act(act: str):
     need("legislation")
     code = resolve_code(act)
     act_id, name = ACT_CODES[code]
-    rows = db.execute(
-        "SELECT section_number, text, act_status FROM leg WHERE act_id=? AND section_type='section'",
-        [act_id]).fetchall()
-    secs, proper = {}, set()
-    for num, text, _ in rows:
-        title, body = split_heading(text)
-        is_proper = bool(BOLD_HEAD.search(body[:400]))
-        # one section number can span several chunks; keep the row with a real heading
-        if num not in secs or (is_proper and num not in proper):
-            secs[num] = {"number": num, "label": f"§ {num}", "title": title}
-            if is_proper:
-                proper.add(num)
-    status = rows[0][2] if rows else "in_force"
+    secs = [{"number": num, "label": f"§ {num}", "title": d["title"]}
+            for (c, num), d in CLEAN.items() if c == code]
     return {"act": {"code": code, "fullName": name, "actId": act_id,
-                    "status": "repealed" if status == "repealed" else "in_force"},
-            "sections": sorted(secs.values(), key=lambda s: section_key(s["number"]))}
+                    "status": "repealed" if code in REPEALED else "in_force",
+                    "unavailableSections": UNAVAILABLE.get(code, [])},
+            "sections": sorted(secs, key=lambda x: section_key(x["number"]))}
 
 
 def _equivalent_payload(code: str, title: str):
@@ -401,30 +450,32 @@ def _equivalent_payload(code: str, title: str):
 
 
 def statute_section_plain(code: str, section: str) -> dict:
-    """The section itself (no equivalent lookup, so the equivalent can reuse it safely)."""
+    """A verified section (no equivalent lookup, so the equivalent can reuse it safely)."""
     need("legislation")
-    act_id, name = ACT_CODES[code]
-    rows = db.execute(
-        "SELECT text, act_status, section_type, chunk_id, source_url FROM leg "
-        "WHERE act_id=? AND section_number=? ORDER BY chunk_id", [act_id, section]).fetchall()
-    if not rows:
+    d = CLEAN.get((code, section))
+    if d is None:
+        if section in UNAVAILABLE.get(code, []):
+            raise HTTPException(404, f"The text of {code} section {section} isn't reliably available in this library.")
         raise HTTPException(404, f"{code} section {section} not found")
-    main = [r for r in rows if r[2] == "section"] or rows
-    # lead with the chunk that carries the real heading, then the rest in order
-    main.sort(key=lambda r: 0 if BOLD_HEAD.search(split_heading(r[0])[1][:400]) else 1)
-    title, _ = split_heading(main[0][0])
-    body = "\n\n".join(split_heading(r[0])[1] for r in main)
-    return {"actCode": code, "actFullName": name, "number": section,
-            "label": f"§ {section}", "title": title, "text": body,
-            "status": "repealed" if rows[0][1] == "repealed" else "in_force",
-            "sourceUrl": rows[0][4]}
+    return {"actCode": code, "actFullName": ACT_CODES[code][1], "number": section, "label": f"§ {section}",
+            "title": d["title"], "text": d["text"], "status": d["status"], "sourceUrl": d["sourceUrl"]}
+
+
+def _display_text(t: str) -> str:
+    """The stored text is markdown; the section screen shows plain text."""
+    t = re.sub(r"(?m)^#{1,6}\s*", "", t)
+    t = t.replace("**", "")
+    t = re.sub(r"(?<![\w])_([^_\n]+?)_(?![\w])", r"\1", t)
+    return re.sub(r"[ \t]+([.,;:)])", r"\1", re.sub(r"\(\s+", "(", t))
 
 
 @app.get("/api/statutes/{act}/{section}")
 def statute_section(act: str, section: str):
     code = resolve_code(act)
-    d = statute_section_plain(code, section)
-    return {"section": d, "equivalent": _equivalent_payload(code, d["title"])}
+    d = dict(statute_section_plain(code, section))
+    d["text"] = _display_text(d["text"])
+    # interpretedBy: the section screen requires the list; judgments that interpret a section are not indexed yet
+    return {"section": d, "equivalent": _equivalent_payload(code, d["title"]), "interpretedBy": [], "interpretedByTotal": 0}
 
 
 # --------------------------------------------------------------------------- cases
@@ -447,13 +498,26 @@ def parse_reporter_cite(q: str):
     return None
 
 
+SCR_RX = re.compile(r"(?i)\[?\(?(\d{4})\)?\]?\s*(\d+)\s*S\.?\s?C\.?\s?R\.?\s*(\d+)")
+
+
+def _by_scr_cite(q: str):
+    """Supreme Court Reports citations such as "[1978] 2 S.C.R. 621", matched on the stored citation text."""
+    mt = SCR_RX.search(q)
+    if not mt:
+        return []
+    key = f"{mt.group(1)}{mt.group(2)}scr{mt.group(3)}"
+    return [r[0] for r in db.execute(
+        "SELECT case_id FROM cases WHERE regexp_replace(lower(coalesce(citation,'')),'[^a-z0-9]','','g') = ?", [key]).fetchall()]
+
+
 def _by_reporter_cite(q: str):
     """Case ids for an AIR/SCC citation, or [] (also if the map is not built)."""
     if not _ready.get("parallel"):
         return []
     key = parse_reporter_cite(q)
     if not key:
-        return []
+        return _by_scr_cite(q)
     return [r[0] for r in db.execute("SELECT case_id FROM pc.parallel WHERE cite_key=?", [key]).fetchall()]
 
 
@@ -464,11 +528,39 @@ def _parallel_cites(case_id: str) -> list[str]:
         "SELECT cite_text FROM pc.parallel WHERE case_id=? ORDER BY cite_key", [case_id]).fetchall()]
 
 
-def _search_cases(q: str, limit: int = 8):
+VS_RX = re.compile(r"(?i)\s+(?:v\.?|vs\.?|versus)\s+")
+
+
+def _parties(ql: str):
+    """'A v. B' -> ('a', 'b'); anything else -> None."""
+    parts = [x.strip(" .,") for x in VS_RX.split(ql) if x.strip(" .,")]
+    return (parts[0], parts[1]) if len(parts) == 2 else None
+
+
+def _search_cases(q: str, limit: int = 8, topic_ok: bool = True):
     need("cases")
     q = q.strip()
     if len(q) < 2:
         return []
+    pp = _parties(q.lower())
+    if pp:   # "Arnesh Kumar v. State of Bihar": both names must be in the title, whatever "v."/"versus"/"Vs" it uses
+        rows = db.execute(
+            """SELECT c.case_id, c.title, c.court, c.decision_date, c.citation, c.case_number, c.disposition, c.year
+               FROM cases c LEFT JOIN cited_counts n ON n.cited = c.case_id
+               WHERE lower(c.title) LIKE ? AND lower(c.title) LIKE ?
+               ORDER BY coalesce(n.n, 0) DESC, c.year DESC NULLS LAST LIMIT ?""",
+            [f"%{pp[0]}%", f"%{pp[1]}%", limit]).fetchall()
+        if not rows and len(pp[0]) >= 6:   # titles are OCR text ("STA TE OF PUNJAB"): fall back to the first party alone
+            rows = db.execute(
+                """SELECT c.case_id, c.title, c.court, c.decision_date, c.citation, c.case_number, c.disposition, c.year
+                   FROM cases c LEFT JOIN cited_counts n ON n.cited = c.case_id
+                   WHERE lower(c.title) LIKE ? ORDER BY coalesce(n.n, 0) DESC, c.year DESC NULLS LAST LIMIT ?""",
+                [f"%{pp[0]}%", min(limit, 3)]).fetchall()
+        out = [{"docId": r[0], "title": r[1], "docsource": r[2], "publishdate": r[3], "citation": r[4],
+                "caseNumber": r[5], "disposition": r[6], "year": r[7]} for r in rows]
+        if len(out) < limit and _ready.get("hc"):
+            out += _search_hc(q.lower(), limit - len(out))
+        return out
     ids = _by_reporter_cite(q)  # "AIR 1979 SC 798", "(1979) 2 SCC 529" ...
     if ids:
         rows = db.execute(
@@ -495,9 +587,54 @@ def _search_cases(q: str, limit: int = 8):
                          ELSE 3 END,
                     coalesce(n.n, 0) DESC, c.year DESC NULLS LAST
            LIMIT ?""", [like] * 5 + [ql, like, like, like, limit]).fetchall()
-    return [{"docId": r[0], "title": r[1], "docsource": r[2], "publishdate": r[3],
-             "citation": r[4], "caseNumber": r[5], "disposition": r[6], "year": r[7]}
-            for r in rows]
+    out = [{"docId": r[0], "title": r[1], "docsource": r[2], "publishdate": r[3],
+            "citation": r[4], "caseNumber": r[5], "disposition": r[6], "year": r[7]}
+           for r in rows]
+    if topic_ok and len(out) < limit and topic.available() and len(topic.terms(q)) >= 1 and not re.search(r"\d{3,}", q):
+        # topic words ("anticipatory bail"): Supreme Court judgments whose text discusses it
+        seen = {d["docId"] for d in out}
+        for r in topic.search(q, limit, cite_count=_cited_by_count):
+            if r["case_id"] in seen or len(out) >= limit:
+                continue
+            row = db.execute("SELECT case_id, title, court, decision_date, citation, case_number, disposition, year FROM cases WHERE case_id=?",
+                             [r["case_id"]]).fetchone()
+            if row:
+                out.append({"docId": row[0], "title": row[1], "docsource": row[2], "publishdate": row[3], "citation": row[4],
+                            "caseNumber": row[5], "disposition": row[6], "year": row[7], "matchedPassages": r["hits"]})
+    if len(out) < limit and _ready.get("hc"):
+        out += _search_hc(ql, limit - len(out))
+    return out
+
+
+CASE_TYPE_TITLE = r"^[A-Z][A-Z .()/&-]*[ ][0-9]+ of [0-9]{4}$"   # "ANTICIPATORY BAIL 1 of 2025": a docket label, no parties
+
+
+def _search_hc(ql: str, limit: int):
+    """High Court judgments by party name / case number (title text). Newest first."""
+    pp = _parties(ql)
+    order = ""
+    if pp:
+        where, args = "lower(title) LIKE ? AND lower(title) LIKE ?", [f"%{pp[0]}%", f"%{pp[1]}%"]
+        order = f"CASE WHEN lower(title) LIKE '% {pp[0].replace(chr(39), '')} %' OR lower(title) LIKE '{pp[0].replace(chr(39), '')} %' THEN 0 ELSE 1 END, "
+    elif re.search(r"\d", ql):   # looks like a case number: also look there
+        where, args = "lower(title) LIKE ? OR lower(coalesce(case_number,'')) LIKE ?", [f"%{ql}%"] * 2
+    else:
+        where, args = "lower(title) LIKE ?", [f"%{ql}%"]
+    where = f"({where}) AND NOT regexp_matches(title, '{CASE_TYPE_TITLE}')"
+    rows = db.execute(
+        f"""SELECT case_id, title, court, decision_date, citation, case_number, disposition, year
+            FROM hc.hc_cases WHERE {where} ORDER BY {order}year DESC NULLS LAST LIMIT ?""", args + [limit]).fetchall()
+    return [{"docId": r[0], "title": r[1], "docsource": r[2], "publishdate": r[3], "citation": r[4] or "",
+             "caseNumber": r[5], "disposition": r[6], "year": r[7]} for r in rows]
+
+
+def _case_file(case_id: str):
+    """Parquet file holding a case's text (Supreme Court file, or its High Court's file)."""
+    if _ready.get("hc"):
+        r = db.execute("SELECT slug FROM hc.hc_cases WHERE case_id=? LIMIT 1", [case_id]).fetchone()
+        if r:
+            return str(CORPUS / f"in_{r[0]}_judgments.parquet")
+    return str(CORPUS / "in_supreme-court_judgments.parquet")
 
 
 @app.post("/api/research/v3/search")
@@ -511,6 +648,9 @@ def _case_row(case_id: str):
     r = db.execute(
         "SELECT case_id, title, court, citation, year, decision_date FROM cases WHERE case_id=?",
         [case_id]).fetchone()
+    if r is None and _ready.get("hc"):
+        r = db.execute("SELECT case_id, title, court, citation, year, decision_date FROM hc.hc_cases WHERE case_id=? LIMIT 1",
+                       [case_id]).fetchone()
     return r
 
 
@@ -691,6 +831,9 @@ import sys  # noqa: E402
 from server import nyra  # noqa: E402
 
 nyra.register(app, sys.modules[__name__])  # before the catch-all /api/* stubs so it wins
+from server import editor  # noqa: E402
+
+editor.register(app)
 
 
 # --------------------------------------------------------------------------- stubs
@@ -737,6 +880,95 @@ async def auth_change_password(request: Request):
     body = await request.json()
     auth.change_password(request.state.user, str(body.get("currentPassword", "")), str(body.get("newPassword", "")))
     return {"success": True}
+
+
+async def _json_body(request: Request) -> dict:
+    try:
+        body = await request.json()
+    except Exception:
+        raise auth.AuthError("Invalid request", 400)
+    if not isinstance(body, dict):
+        raise auth.AuthError("Invalid request", 400)
+    return body
+
+
+@app.get("/api/auth/config")
+def auth_config():
+    return {"signupEnabled": auth.signup_enabled(), "captchaSiteKey": os.environ.get("TURNSTILE_SITE_KEY") or None,
+            "termsVersion": auth.TERMS_VERSION}
+
+
+@app.post("/api/auth/register")
+async def auth_register(request: Request):
+    b = await _json_body(request)
+    out = auth.register(request, str(b.get("email", "")), str(b.get("password", "")), str(b.get("name", "")),
+                        b.get("acceptTerms"), b.get("captchaToken"))
+    return {"success": True, **out}
+
+
+@app.post("/api/auth/verify-email")
+async def auth_verify_email(request: Request):
+    b = await _json_body(request)
+    return {"success": True, **auth.verify_email(request, str(b.get("token", "")))}
+
+
+@app.post("/api/auth/resend-verification")
+async def auth_resend(request: Request):
+    b = await _json_body(request)
+    return {"success": True, **auth.resend_verification(request, str(b.get("email", "")))}
+
+
+@app.post("/api/auth/forgot-password")
+async def auth_forgot(request: Request):
+    b = await _json_body(request)
+    return {"success": True, **auth.forgot_password(request, str(b.get("email", "")))}
+
+
+@app.post("/api/auth/reset-password")
+async def auth_reset(request: Request):
+    b = await _json_body(request)
+    return {"success": True, **auth.reset_password(request, str(b.get("token", "")), str(b.get("newPassword", "")))}
+
+
+# ---- the account-settings screen: export, profile, scheduled deletion (privacy rights) ----
+def _full_export(row) -> dict:
+    return {**auth.account_export(row), **nyra.export_user(row["id"]), "editorDocuments": editor.export_user(row["id"])}
+
+
+@app.get("/api/gdpr/export")
+def gdpr_export(request: Request):
+    return {"success": True, "data": _full_export(request.state.user)}
+
+
+@app.get("/api/gdpr/export/portable")
+def gdpr_export_portable(request: Request):
+    return {"@context": "https://schema.org", "@type": "Dataset", "name": "LexBharat account data", **_full_export(request.state.user)}
+
+
+@app.get("/api/gdpr/profile")
+def gdpr_profile(request: Request):
+    return {"success": True, "data": auth._profile_fields(request.state.user)}
+
+
+@app.put("/api/gdpr/profile")
+async def gdpr_profile_update(request: Request):
+    return {"success": True, "data": auth.update_profile(request.state.user, await _json_body(request))}
+
+
+@app.post("/api/gdpr/delete-account")
+def gdpr_delete(request: Request):
+    return {"success": True, "data": auth.request_deletion(request.state.user)}
+
+
+@app.post("/api/gdpr/cancel-deletion")
+def gdpr_cancel(request: Request):
+    auth.cancel_deletion(request.state.user)
+    return {"success": True}
+
+
+@app.get("/api/gdpr/deletion-status")
+def gdpr_deletion_status(request: Request):
+    return {"success": True, "data": auth.deletion_status(request.state.user)}
 
 
 @app.api_route("/api/auth/{rest:path}", methods=["GET", "POST", "PUT", "PATCH", "DELETE"])
@@ -796,6 +1028,52 @@ def api_fallback(rest: str, request: Request):
 @app.get("/signin")
 def signin_page():
     return FileResponse(WEB / "signin.html")
+
+
+@app.get("/signup")
+def signup_page():
+    return FileResponse(WEB / "signup.html")
+
+
+@app.get("/verify")
+def verify_page():
+    return FileResponse(WEB / "verify.html")
+
+
+@app.get("/forgot-password")
+def forgot_page():
+    return FileResponse(WEB / "forgot.html")
+
+
+@app.get("/reset-password")
+def reset_page():
+    return FileResponse(WEB / "reset.html")
+
+
+def _legal_route(slug: str):
+    def handler():
+        return FileResponse(WEB / "legal" / f"{slug}.html")
+    return handler
+
+
+for _slug in ("terms-conditions", "privacy-policy", "acceptable-use", "refund-policy", "legal-notice", "security", "delete-data"):
+    app.add_api_route(f"/{_slug}", _legal_route(_slug), methods=["GET"], include_in_schema=False)
+
+
+@app.get("/", include_in_schema=False)
+def home():
+    return FileResponse(WEB / "home.html")
+
+
+def _to_home():
+    return RedirectResponse("/", status_code=302)
+
+
+# Pages of the original product's marketing site that describe features, plans and apps this build does not have.
+for _p in ("about", "firms", "mobile", "pricing", "findmylawyer", "findmylawyer/compliance", "findmylawyer/how-it-works",
+           "get-demo", "blog", "blog/videos", "docs", "tutorials", "whatsapp", "marketing/activate", "classic", "old",
+           "signed-out", "contact", "leads"):
+    app.add_api_route(f"/{_p}", _to_home, methods=["GET"], include_in_schema=False)
 
 
 @app.get("/{path:path}")

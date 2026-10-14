@@ -1,0 +1,47 @@
+[
+ {
+  "id": "P03",
+  "cat": "topic",
+  "q": "Which Supreme Court judgments deal with the notice period for cheque dishonour under section 138?",
+  "pass": false,
+  "checks": {
+   "retrieval": false,
+   "facts": true,
+   "citations": true,
+   "no_error": true
+  },
+  "answer": "The Supreme Court judgment that deals with the notice period for cheque dishonour under section 138 is [MSR LEATHERS versus S. PALANIAPPAN & ANR., [2012] 9 S.C.R. 165; (2013) 1 SCC 177]. This judgment discusses the period within which a holder or payee can present a cheque for encashment and the conditions under which a complaint under Section 138 can be filed.\n\n[MSR LEATHERS versus S. PALANIAPPAN & ANR., [2012] 9 S.C.R. 165, page 15-17]",
+  "retrieved": [
+   "NIA § 138",
+   "NIA § 85",
+   "NIA § 135",
+   "NIA § 92",
+   "NIA § 93",
+   "2012_INSC_424",
+   "2017_INSC_830",
+   "2000_INSC_97"
+  ],
+  "t_retrieve": 4.3,
+  "t_answer": 22.6
+ },
+ {
+  "id": "P04",
+  "cat": "topic",
+  "q": "What is the basic structure doctrine and which cases developed it?",
+  "pass": true,
+  "checks": {
+   "retrieval": true,
+   "facts": true,
+   "citations": true,
+   "no_error": true
+  },
+  "answer": "The basic structure doctrine refers to the idea that certain fundamental principles and features of the Indian Constitution are essential and cannot be altered or abrogated by any legislative action, even if such action is taken in accordance with the constitutional amendment procedure. This doctrine has been developed through several landmark judgments, notably:\n\n- **[JUSTICE K S PUTTASWAMY (RETD.), AND ANR.  versus UNION OF INDIA AND ORS., [2017] 10 S.C.R. 569]**: This case reiterates the importance of the basic structure doctrine and emphasizes that the Constitution is a living document that must be interpreted in light of the development of law and the experience of the people.\n\n- **[I. R. COELHO (DEAD) BY LRS. versus STATE OF TAMIL NADU, [2007] 1 S.C.R. 706]**: This case further solidifies the basic structure doctrine by stating that any law that abrogates or abridges rights guaranteed by Part III of the Constitution and violates the basic structure doctrine can be invalidated by the Court.\n\nThese cases highlight the dynamic nature of the Constitution and the need to protect its core principles.",
+  "retrieved": [
+   "2017_INSC_801",
+   "2007_INSC_28",
+   "1973_INSC_91"
+  ],
+  "t_retrieve": 6.2,
+  "t_answer": 24.8
+ }
+]

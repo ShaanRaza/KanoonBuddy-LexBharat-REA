@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex">
+<meta name="color-scheme" content="light dark"><title>Confirm your email · LexBharat</title>
+<link rel="stylesheet" href="/auth.css">
+</head>
+<body>
+<main>
+  <h1 class="brand">LexBharat</h1>
+  <div class="card" id="box"><p id="status" style="margin:0">Confirming your email…</p></div>
+</main>
+<script src="/auth.js"></script>
+<script>
+(async function () {
+  var L = window.LB, $ = L.$, box = $("box");
+  var token = L.qs.get("token") || "";
+  if (history.replaceState) history.replaceState(null, "", "/verify");   // keep the one-time token out of history and referrers
+  if (!token) { box.innerHTML = "<p style='margin:0'>This link is incomplete. Open the link from your email again.</p>"; return; }
+  try {
+    var j = await L.post("/api/auth/verify-email", { token: token });
+    if (j.success) { location.replace("/signin?verified=1"); return; }
+    box.innerHTML = "<h2 style='margin:0 0 8px;font-size:20px'>That link didn't work</h2><p style='margin:0 0 12px'></p>" +
+      "<p class='hint' style='margin:0'>It may have expired or already been used. <a href='/signin'>Sign in</a> to request a new one.</p>";
+    box.querySelector("p").textContent = j._status === 429 ? L.wait(j) : (j.error || "This link is invalid or has expired.");
+  } catch (e) { box.innerHTML = "<p style='margin:0'>Could not reach the server. Check your connection and reload this page.</p>"; }
+})();
+</script>
+</body>
+</html>

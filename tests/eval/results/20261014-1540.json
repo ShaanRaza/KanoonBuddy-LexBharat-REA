@@ -1,0 +1,79 @@
+[
+ {
+  "id": "P01",
+  "cat": "topic",
+  "q": "What do the Supreme Court and High Courts say about anticipatory bail under Section 438?",
+  "pass": false,
+  "checks": {
+   "retrieval": false,
+   "facts": true,
+   "citations": true,
+   "no_error": true
+  },
+  "answer": "Section 438 of the CrPC, which is now replaced by Section 482 of the BNSS, deals with the grant of anticipatory bail. According to the BNSS, a person apprehending arrest for a non-bailable offence can apply to the High Court or the Court of Session for a direction to be released on bail. The court may grant such a direction and include specific conditions, such as the person's availability for interrogation, prohibition from making inducements or threats, and restrictions on leaving India without permission.\n\n[BNSS § 482]",
+  "retrieved": [
+   "BNSS § 482"
+  ],
+  "t_retrieve": 0.0,
+  "t_answer": 13.0
+ },
+ {
+  "id": "P02",
+  "cat": "topic",
+  "q": "What has the Supreme Court said about the right to privacy?",
+  "pass": true,
+  "checks": {
+   "retrieval": true,
+   "facts": true,
+   "citations": true,
+   "no_error": true
+  },
+  "answer": "The Supreme Court of India, in the case of Justice K S Puttaswamy (Retd.) and Anr. versus Union of India and Ors. [2017] 10 S.C.R. 569, recognized the right to privacy as a fundamental right under the Indian Constitution. The Court drew inspiration from international jurisprudence, including that from the United States, where the right to privacy has been developed through various constitutional amendments and judicial interpretations. The Court also discussed the types of privacy, including informational privacy, and emphasized the right of individuals to control their personal information in the digital age. [JUSTICE K S PUTTASWAMY (RETD.), AND ANR.  versus UNION OF INDIA AND ORS., [2017] 10 S.C.R. 569, pages 13, 192, 217]",
+  "retrieved": [
+   "2017_INSC_801"
+  ],
+  "t_retrieve": 3.8,
+  "t_answer": 14.2
+ },
+ {
+  "id": "P03",
+  "cat": "topic",
+  "q": "Which Supreme Court judgments deal with the notice period for cheque dishonour under section 138?",
+  "pass": false,
+  "checks": {
+   "retrieval": false,
+   "facts": true,
+   "citations": true,
+   "no_error": true
+  },
+  "answer": "The sources provided do not contain any Supreme Court judgments dealing with the notice period for cheque dishonour under Section 138 of the Negotiable Instruments Act, 1881. The excerpts and sections cited are from the Negotiable Instruments Act itself and a High Court judgment, but they do not include any Supreme Court rulings on this specific topic.\n\nTo find relevant Supreme Court judgments, you would need to search through the database of Supreme Court decisions, focusing on cases that involve Section 138 of the Negotiable Instruments Act, 1881, particularly those that discuss the notice period for cheque dishonour.",
+  "retrieved": [
+   "NIA § 138",
+   "NIA § 85",
+   "NIA § 135",
+   "NIA § 92",
+   "NIA § 93",
+   "KLHC010553162022"
+  ],
+  "t_retrieve": 1.1,
+  "t_answer": 12.7
+ },
+ {
+  "id": "P04",
+  "cat": "topic",
+  "q": "What is the basic structure doctrine and which cases developed it?",
+  "pass": false,
+  "checks": {
+   "retrieval": false,
+   "facts": true,
+   "citations": true,
+   "no_error": true
+  },
+  "answer": "The basic structure doctrine refers to the idea that certain fundamental principles and values are inherent in the Constitution and cannot be altered by any legislative action. This doctrine has been developed through various landmark judgments, with one of the key cases being *Justice K.S. Puttaswamy (Retd.) and Anr. versus Union of India and Ors.*, where the Supreme Court held that the right to privacy is a fundamental right under the Constitution. Another significant case is *I.R. Coelho (dead) by I.Rs. v. State of Tamil Nadu & Ors.*, which also emphasized the importance of interpreting the Constitution in light of its basic structure. These cases highlight the evolving nature of constitutional interpretation and the protection of fundamental rights. [JUSTICE K S PUTTASWAMY (RETD.), AND ANR.  versus UNION OF INDIA AND ORS., [2017] 10 S.C.R. 569, p. 311; I.R. Coelho (dead) by I.Rs. v. State of Tamil Nadu & Ors., (2007) 2 SCC 1, p. 79]",
+  "retrieved": [
+   "2017_INSC_801"
+  ],
+  "t_retrieve": 4.2,
+  "t_answer": 23.0
+ }
+]

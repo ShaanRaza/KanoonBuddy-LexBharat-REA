@@ -1,0 +1,20 @@
+[
+ {
+  "id": "T06",
+  "cat": "trap",
+  "q": "What does section 438 of the CrPC say?",
+  "pass": true,
+  "checks": {
+   "retrieval": true,
+   "facts": true,
+   "citations": true,
+   "no_error": true
+  },
+  "answer": "Section 438 of the CrPC, which is now replaced by section 482 of the BNSS, allows a person apprehending arrest for a non-bailable offence to apply to the High Court or the Court of Session for a direction to be released on bail. The court may grant such a direction with conditions, including making oneself available for police interrogation, not making inducements, threats, or promises to witnesses, not leaving India without permission, and other conditions as specified. If arrested, the person must be released on bail if prepared to do so, and a bailable warrant may be issued if a Magistrate deems it necessary. Note that this section does not apply to cases involving sections 65 and 70 of the BNS. [BNSS § 482]",
+  "retrieved": [
+   "BNSS § 482"
+  ],
+  "t_retrieve": 0.0,
+  "t_answer": 12.6
+ }
+]

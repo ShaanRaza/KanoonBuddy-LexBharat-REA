@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex">
+<meta name="color-scheme" content="light dark"><title>Reset your password · LexBharat</title>
+<link rel="stylesheet" href="/auth.css">
+</head>
+<body>
+<main>
+  <h1 class="brand">LexBharat</h1>
+  <p class="sub">Enter your email and we'll send a link to choose a new password.</p>
+  <form id="f" novalidate>
+    <div id="msg" class="msg" role="alert" aria-live="polite"></div>
+    <label for="email">Email</label>
+    <input id="email" type="email" autocomplete="email" inputmode="email" required autofocus>
+    <button id="go" class="primary" type="submit">Send reset link</button>
+  </form>
+  <p class="note"><a href="/signin">Back to sign in</a></p>
+</main>
+<script src="/auth.js"></script>
+<script>
+(function () {
+  var L = window.LB, $ = L.$;
+  $("f").addEventListener("submit", async function (ev) {
+    ev.preventDefault(); L.show("");
+    var email = $("email").value.trim();
+    if (!email) { L.show("Enter your email."); return; }
+    $("go").disabled = true; $("go").textContent = "Sending…";
+    try {
+      var j = await L.post("/api/auth/forgot-password", { email: email });
+      if (j._status === 429) L.show(L.wait(j));
+      else if (j.success) { L.show(j.message, "ok"); $("go").textContent = "Sent"; return; }
+      else L.show(j.error || "Something went wrong. Try again.");
+    } catch (x) { L.show("Could not reach the server. Check your connection and try again."); }
+    $("go").disabled = false; $("go").textContent = "Send reset link";
+  });
+})();
+</script>
+</body>
+</html>

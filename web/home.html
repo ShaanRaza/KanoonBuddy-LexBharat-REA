@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>LexBharat · Legal research for Indian law</title>
+<meta name="description" content="Search Indian statutes and Supreme Court and High Court judgments, and ask KanoonBuddy questions answered from cited sources.">
+<link rel="canonical" href="https://lexbharat.ai/">
+<style>
+:root { --bg:#fafaf9; --card:#fff; --fg:#1c1917; --mut:#6b6761; --line:#e7e5e4; --acc:#c2571a; --accfg:#fff; }
+@media (prefers-color-scheme: dark) { :root { --bg:#141413; --card:#1d1c1b; --fg:#f5f4f2; --mut:#a09b94; --line:#33312f; --acc:#e8742c; --accfg:#1a0f08; } }
+* { box-sizing:border-box }
+body { margin:0; background:var(--bg); color:var(--fg); font:16px/1.6 system-ui,-apple-system,"Segoe UI",sans-serif }
+.wrap { max-width:880px; margin:0 auto; padding:0 20px }
+header { display:flex; justify-content:space-between; align-items:center; padding:18px 0 }
+.brand { font:600 24px/1 Georgia,"Playfair Display",serif; text-decoration:none; color:var(--fg) }
+nav a { margin-left:16px; color:var(--mut); text-decoration:none; font-size:15px }
+h1 { font:600 clamp(32px,6vw,52px)/1.1 Georgia,"Playfair Display",serif; margin:56px 0 16px; letter-spacing:-.5px }
+.lede { color:var(--mut); font-size:19px; max-width:640px; margin:0 0 28px }
+.btn { display:inline-block; padding:12px 22px; border-radius:10px; font-weight:600; text-decoration:none; margin:0 10px 10px 0; border:1px solid var(--acc) }
+.btn.p { background:var(--acc); color:var(--accfg) } .btn.s { color:var(--acc) }
+.btn:focus-visible, a:focus-visible { outline:2px solid var(--acc); outline-offset:2px }
+.grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:14px; margin:48px 0 }
+.card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:20px }
+.card h2 { font-size:17px; margin:0 0 6px } .card p { margin:0; color:var(--mut); font-size:15px }
+h2.sec { font:600 24px/1.2 Georgia,serif; margin:44px 0 12px }
+ul.plain { padding-left:20px; color:var(--mut) } ul.plain li { margin:6px 0 }
+footer { border-top:1px solid var(--line); margin-top:56px; padding:24px 0 40px; color:var(--mut); font-size:14px }
+footer a { color:var(--mut); margin-right:14px }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <a class="brand" href="/">LexBharat</a>
+    <nav><a href="/signin">Sign in</a><a href="/signup">Create account</a></nav>
+  </header>
+
+  <h1>Legal research for Indian law, with sources you can check.</h1>
+  <p class="lede">Look up statutes and judgments, and ask KanoonBuddy a question. Each answer is written from the sections and judgment passages it retrieved, and cites them.</p>
+  <a class="btn p" href="/signup">Create a free account</a><a class="btn s" href="/signin">Sign in</a>
+
+  <div class="grid">
+    <div class="card"><h2>Statutes</h2><p>BNS, BNSS, BSA, the older IPC and Indian Evidence Act, and the Negotiable Instruments Act, with old-to-new section mapping.</p></div>
+    <div class="card"><h2>Judgments</h2><p>Supreme Court of India and the High Courts. Search by party name, citation or case number, and open the cases a judgment cites.</p></div>
+    <div class="card"><h2>KanoonBuddy</h2><p>Ask in plain words. It answers from retrieved sources, shows what it relied on, and says so when it can't find an answer.</p></div>
+    <div class="card"><h2>Editor</h2><p>A simple document editor for your notes and drafts, saved to your account.</p></div>
+  </div>
+
+  <h2 class="sec">Know the limits</h2>
+  <ul class="plain">
+    <li>KanoonBuddy is an AI model and can be wrong. Check every section and citation against the official text before you rely on it. It is a research aid, not legal advice.</li>
+    <li>Not yet included: the Code of Criminal Procedure 1973, the Code of Civil Procedure 1908 and the Constitution as statute text. District courts, live court status and cause lists are not covered.</li>
+    <li>Judgment text comes from a public dataset and can contain scanning errors. Excerpts are shown as excerpts, not the whole judgment.</li>
+    <li>Free during early access, with a daily limit on questions. Paid plans are not available yet.</li>
+  </ul>
+
+  <footer>
+    <a href="/terms-conditions">Terms</a><a href="/privacy-policy">Privacy</a><a href="/acceptable-use">Acceptable use</a><a href="/refund-policy">Refunds</a><a href="/security">Security</a><a href="/delete-data">Delete your data</a>
+    <p>Legal texts and judgments: Open India Law dataset by Vaquill AI, licensed <a href="https://creativecommons.org/licenses/by/4.0/" rel="noopener">CC BY 4.0</a>, collected from official government and court sources.</p>
+    <p>© 2026 LexBharat · <a href="mailto:support@lexbharat.ai">support@lexbharat.ai</a></p>
+  </footer>
+</div>
+<script>
+try { var a = JSON.parse(localStorage.getItem("lawcentral_auth") || "null"); if (a && a.token) location.replace("/dashboard"); } catch (e) {}
+</script>
+</body>
+</html>

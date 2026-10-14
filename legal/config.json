@@ -1,0 +1,17 @@
+{
+  "product": "LexBharat",
+  "assistant": "KanoonBuddy",
+  "site": "https://lexbharat.ai",
+  "contact_email": "support@lexbharat.ai",
+  "entity_name": "",
+  "entity_address": "",
+  "grievance_officer_name": "",
+  "grievance_officer_email": "",
+  "jurisdiction_city": "",
+  "hosting_region": "",
+  "log_retention_days": 30,
+  "chat_retention_days": 180,
+  "deletion_grace_days": 30,
+  "free_daily_questions": 30,
+  "effective": "14 October 2026"
+}

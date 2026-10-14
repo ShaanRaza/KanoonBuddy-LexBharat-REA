@@ -1,0 +1,38 @@
+[
+ {
+  "id": "H02",
+  "cat": "high-court",
+  "q": "Find the Bombay High Court case Maneka Gandhi v. Union of India writ petition 263 of 1997",
+  "pass": true,
+  "checks": {
+   "retrieval": true,
+   "citations": true,
+   "no_error": true
+  },
+  "answer": "The Bombay High Court case Maneka Gandhi vs Union of India, Writ Petition (Civil) No. 263 of 1997, was decided on 30 September 2013. The petition was allowed to be withdrawn, and the petition was disposed of accordingly. [WP/263/1997 of MANEKA GANDHI Vs UNION OF INDIA and ORS., page 1]",
+  "retrieved": [
+   "1978_INSC_16",
+   "HCBM020002121997"
+  ],
+  "t_retrieve": 3.8,
+  "t_answer": 9.3
+ },
+ {
+  "id": "H03",
+  "cat": "high-court",
+  "q": "Tell me about the case Arnesh Kumar v. State of Bihar",
+  "pass": true,
+  "checks": {
+   "retrieval": true,
+   "citations": true,
+   "no_error": true
+  },
+  "answer": "In the case of Arnesh Kumar v. State of Bihar, the Supreme Court of India decided on 2014-07-02. The court allowed the appeal, emphasizing the need for police officers to avoid unnecessary arrests and for magistrates to scrutinize the conditions for arrest strictly. The court directed state governments to instruct their police officers to not automatically arrest individuals when a case under Section 498-A of the Indian Penal Code (IPC) is registered, but to ensure there is a valid reason for the arrest. The court also stated that judicial magistrates authorizing detention without recording reasons should face departmental action by the appropriate High Court.\n\n[ARNESH KUMAR versus STATE OF BIHAR & ANR., [2014] 8 S.C.R. 128, 2014-07-02]",
+  "retrieved": [
+   "2014_INSC_463",
+   "BRHC010039392020"
+  ],
+  "t_retrieve": 4.5,
+  "t_answer": 17.6
+ }
+]

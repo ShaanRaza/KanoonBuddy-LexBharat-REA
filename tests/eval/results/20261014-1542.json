@@ -1,0 +1,80 @@
+[
+ {
+  "id": "P01",
+  "cat": "topic",
+  "q": "What do the Supreme Court and High Courts say about anticipatory bail under Section 438?",
+  "pass": true,
+  "checks": {
+   "retrieval": true,
+   "facts": true,
+   "citations": true,
+   "no_error": true
+  },
+  "answer": "The Supreme Court in *Gurba Singh Sibia etc. versus State of Punjab* [1980] 3 S.C.R. 383, [1980] 3 S.C.R. 383; AIR 1980 SC 1632; (1980) 2 SCC 565, held that the power to grant anticipatory bail is an extraordinary remedy available in exceptional cases. The Court emphasized that such bail should only be granted where there are reasonable grounds for believing that the accused is not likely to abscond or misuse his liberty while on bail. The Court also noted that the discretion conferred on the High Court and the Court of Session under Section 438 is wide, allowing them to include specific conditions in the direction for the grant of anticipatory bail, such as the accused's availability for interrogation, non-interference with witnesses, and restrictions on leaving India without permission.\n\nThese conditions are derived from the conditions set out in Section 437(1) and are intended to ensure that the grant of anticipatory bail does not undermine the provisions of Section 437. [Gurba Singh Sibia etc. versus State of Punjab, [1980] 3 S.C.R. 383, p. 29, 21, 7]",
+  "retrieved": [
+   "BNSS § 482",
+   "1980_INSC_68"
+  ],
+  "t_retrieve": 2.6,
+  "t_answer": 31.1
+ },
+ {
+  "id": "P02",
+  "cat": "topic",
+  "q": "What has the Supreme Court said about the right to privacy?",
+  "pass": true,
+  "checks": {
+   "retrieval": true,
+   "facts": true,
+   "citations": true,
+   "no_error": true
+  },
+  "answer": "The Supreme Court of India, in the case of [JUSTICE K S PUTTASWAMY (RETD.), AND ANR. versus UNION OF INDIA AND ORS., [2017] 10 S.C.R. 569], held that the right to privacy is a fundamental right under the Indian Constitution. The Court noted that while the right to privacy is not explicitly mentioned in the Constitution, it can be inferred from various provisions, including those related to personal liberty and personal dignity. The Court also drew upon international jurisprudence, particularly from the United States, to support its reasoning, emphasizing that the right to privacy is essential for protecting individual autonomy and preventing state interference in personal matters.\n\n[JUSTICE K S PUTTASWAMY (RETD.), AND ANR. versus UNION OF INDIA AND ORS., [2017] 10 S.C.R. 569, p. 192]",
+  "retrieved": [
+   "2017_INSC_801"
+  ],
+  "t_retrieve": 4.6,
+  "t_answer": 23.9
+ },
+ {
+  "id": "P03",
+  "cat": "topic",
+  "q": "Which Supreme Court judgments deal with the notice period for cheque dishonour under section 138?",
+  "pass": false,
+  "checks": {
+   "retrieval": false,
+   "facts": true,
+   "citations": true,
+   "no_error": true
+  },
+  "answer": "The provided sources do not contain any Supreme Court judgments dealing with the notice period for cheque dishonour under Section 138 of the Negotiable Instruments Act, 1881. The excerpts and sections cited are from the Negotiable Instruments Act, 1881, and a High Court judgment, but they do not include any Supreme Court judgments on this specific topic.\n\nFor a more detailed and accurate answer, you would need to search through the judgments of the Supreme Court specifically addressing Section 138 of the Negotiable Instruments Act, 1881, related to the notice period for cheque dishonour.",
+  "retrieved": [
+   "NIA § 138",
+   "NIA § 85",
+   "NIA § 135",
+   "NIA § 92",
+   "NIA § 93",
+   "KLHC010553162022"
+  ],
+  "t_retrieve": 1.0,
+  "t_answer": 13.0
+ },
+ {
+  "id": "P04",
+  "cat": "topic",
+  "q": "What is the basic structure doctrine and which cases developed it?",
+  "pass": false,
+  "checks": {
+   "retrieval": false,
+   "facts": true,
+   "citations": true,
+   "no_error": true
+  },
+  "answer": "The basic structure doctrine refers to the idea that certain fundamental principles and values are inherent in the Constitution and cannot be altered by any legislative act. This doctrine has been developed through several landmark judgments, notably [JUSTICE K S PUTTASWAMY (RETD.), AND ANR. versus UNION OF INDIA AND ORS., [2017] 10 S.C.R. 569, (2017) 10 SCC 1]. In this case, the court emphasized that the Constitution is a living document and must be interpreted in light of the development of law and the experience of the people. The court cited [I.R. Coelho (dead) by I.Rs v. State of Tamil Nadu & Ors., (2007) 2 SCC 1] as another significant judgment that supports the expansion and development of the basic structure doctrine.",
+  "retrieved": [
+   "2017_INSC_801"
+  ],
+  "t_retrieve": 5.3,
+  "t_answer": 24.2
+ }
+]

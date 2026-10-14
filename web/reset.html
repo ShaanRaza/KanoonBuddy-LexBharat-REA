@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex">
+<meta name="color-scheme" content="light dark"><title>Choose a new password · LexBharat</title>
+<link rel="stylesheet" href="/auth.css">
+</head>
+<body>
+<main>
+  <h1 class="brand">LexBharat</h1>
+  <p class="sub">Choose a new password.</p>
+  <form id="f" novalidate>
+    <div id="msg" class="msg" role="alert" aria-live="polite"></div>
+    <label for="pw">New password</label>
+    <input id="pw" type="password" autocomplete="new-password" minlength="12" required autofocus>
+    <p class="hint">At least 12 characters. You will be signed out on every device.</p>
+    <label for="pw2">Repeat new password</label>
+    <input id="pw2" type="password" autocomplete="new-password" required>
+    <button id="go" class="primary" type="submit">Change password</button>
+  </form>
+  <p class="note"><a href="/forgot-password">Need a new link?</a></p>
+</main>
+<script src="/auth.js"></script>
+<script>
+(function () {
+  var L = window.LB, $ = L.$;
+  var token = L.qs.get("token") || "";
+  if (history.replaceState) history.replaceState(null, "", "/reset-password");   // keep the token out of history and referrers
+  if (!token) { L.show("This link is incomplete. Open the link from your email again."); $("go").disabled = true; }
+  $("f").addEventListener("submit", async function (ev) {
+    ev.preventDefault(); L.show("");
+    var pw = $("pw").value;
+    if (pw.length < 12) { L.show("Password must be at least 12 characters."); return; }
+    if (pw !== $("pw2").value) { L.show("The two passwords do not match."); return; }
+    $("go").disabled = true; $("go").textContent = "Saving…";
+    try {
+      var j = await L.post("/api/auth/reset-password", { token: token, newPassword: pw });
+      if (j._status === 429) L.show(L.wait(j));
+      else if (j.success) { location.replace("/signin?reset=1"); return; }
+      else L.show(j.error || "Could not change the password.");
+    } catch (x) { L.show("Could not reach the server. Check your connection and try again."); }
+    $("go").disabled = false; $("go").textContent = "Change password";
+  });
+})();
+</script>
+</body>
+</html>

@@ -60,7 +60,9 @@ MAX_FAILS, LOCK_SECONDS, FAIL_WINDOW = 5, 15 * 60, 15 * 60
 ROTATE_OVERLAP = 60  # seconds an old token keeps working after a refresh (parallel requests, second tab)
 
 # Reachable without a token. Everything else under /api needs one.
-PUBLIC_EXACT = {"/api/health", "/api/auth/login", "/api/auth/logout", "/api/auth/refresh",
+PUBLIC_EXACT = {"/api/health", "/api/auth/login", "/api/auth/logout", "/api/auth/refresh", "/api/auth/config",
+                "/api/auth/register", "/api/auth/verify-email", "/api/auth/resend-verification",
+                "/api/auth/forgot-password", "/api/auth/reset-password",
                 "/api/config/features", "/api/track", "/api/subscription/plans"}
 PUBLIC_GET_PREFIX = ("/api/statutes",)  # open-corpus legal text; IP rate limited
 
@@ -125,6 +127,23 @@ def _db() -> sqlite3.Connection:
     if "at" not in [r["name"] for r in c.execute("PRAGMA table_info(revoked)")]:  # migrate older databases
         c.execute("ALTER TABLE revoked ADD COLUMN at REAL NOT NULL DEFAULT 0")
         c.commit()
+    c.executescript(
+        """CREATE TABLE IF NOT EXISTS tokens(hash TEXT PRIMARY KEY, user_id TEXT NOT NULL, purpose TEXT NOT NULL,
+               expires REAL NOT NULL, used INTEGER NOT NULL DEFAULT 0);
+           CREATE TABLE IF NOT EXISTS usage(user_id TEXT NOT NULL, day TEXT NOT NULL, kind TEXT NOT NULL,
+               n INTEGER NOT NULL DEFAULT 0, PRIMARY KEY(user_id, day, kind));
+           CREATE TABLE IF NOT EXISTS mail_log(key TEXT NOT NULL, kind TEXT NOT NULL, at REAL NOT NULL);
+           CREATE INDEX IF NOT EXISTS mail_idx ON mail_log(key, kind, at);"""
+    )
+    ucols = [r["name"] for r in c.execute("PRAGMA table_info(users)")]
+    if "email_verified" not in ucols:  # accounts that already exist were created by an administrator: trusted
+        c.execute("ALTER TABLE users ADD COLUMN email_verified INTEGER NOT NULL DEFAULT 0")
+        c.execute("UPDATE users SET email_verified=1")
+    for col, ddl in (("terms_accepted_at", "REAL"), ("terms_version", "TEXT"), ("deletion_requested_at", "REAL"),
+                     ("deletion_scheduled_at", "REAL"), ("profile", "TEXT")):
+        if col not in ucols:
+            c.execute(f"ALTER TABLE users ADD COLUMN {col} {ddl}")
+    c.commit()
     try:
         os.chmod(p, 0o600)
     except OSError:
@@ -197,8 +216,8 @@ def sign_token(user_id: str, tv: int, sid: float | None = None, now: float | Non
 
 
 class AuthError(Exception):
-    def __init__(self, message="Unauthorized", status=401, headers=None):
-        self.message, self.status, self.headers = message, status, headers or {}
+    def __init__(self, message="Unauthorized", status=401, headers=None, code=None):
+        self.message, self.status, self.headers, self.code = message, status, headers or {}, code
 
 
 def decode_token(token: str, grace: int = 0) -> dict:
@@ -253,12 +272,20 @@ def bearer(request: Request) -> str | None:
     return h[7:].strip() if h[:7].lower() == "bearer " else None
 
 
+def _profile_fields(row) -> dict:
+    try:
+        return json.loads(row["profile"] or "{}")
+    except Exception:
+        return {}
+
+
 def public_user(row) -> dict:
     """The user object the front end expects (invite-only accounts are pre-verified and onboarded)."""
     return {"id": row["id"], "_id": row["id"], "email": row["email"], "name": row["name"] or row["email"].split("@")[0],
-            "role": "advocate", "emailVerified": True, "phoneVerified": True,
+            "role": "advocate", "emailVerified": bool(row["email_verified"]), "phoneVerified": True,
             "onboardingCompletedAt": "2026-01-01T00:00:00.000Z", "onboardingComplete": True,
-            "subscription": {"status": "active", "plan": "invite", "trialEndsAt": None}}
+            "subscription": {"status": "active", "plan": "free", "trialEndsAt": None},
+            **_profile_fields(row)}
 
 
 # ----------------------------------------------------------------------------- rate limiting
@@ -357,6 +384,8 @@ def login(request: Request, email: str, password: str) -> dict:
         if not (row and ok) or row["disabled"]:
             _record_failure(c, key)
             raise AuthError("Invalid email or password", 401)
+        if not row["email_verified"]:
+            raise AuthError("Please confirm your email first. Check your inbox for the link.", 403, code="email_not_verified")
         c.execute("DELETE FROM attempts WHERE key=?", (key,))
         c.execute("UPDATE users SET last_login=? WHERE id=?", (time.time(), row["id"]))
         c.commit()
@@ -423,7 +452,7 @@ def create_user(email: str, password: str, name: str = "") -> str:
     uid = uuid.uuid4().hex
     c = _db()
     try:
-        c.execute("INSERT INTO users(id,email,name,pw_hash,created_at) VALUES (?,?,?,?,?)",
+        c.execute("INSERT INTO users(id,email,name,pw_hash,created_at,email_verified) VALUES (?,?,?,?,?,1)",
                   (uid, email, name or email.split("@")[0], hash_password(password), time.time()))
         c.commit()
     except sqlite3.IntegrityError:
@@ -431,3 +460,287 @@ def create_user(email: str, password: str, name: str = "") -> str:
     finally:
         c.close()
     return uid
+
+
+# ============================================================================= self-service accounts
+TERMS_VERSION = "2026-10-14"   # bump when the Terms or Privacy Policy change in a way users must re-accept
+DELETION_GRACE_DAYS = 30
+DISPOSABLE = {"mailinator.com", "10minutemail.com", "guerrillamail.com", "tempmail.com", "temp-mail.org", "yopmail.com",
+              "trashmail.com", "sharklasers.com", "getnada.com", "throwawaymail.com", "dispostable.com", "maildrop.cc",
+              "fakeinbox.com", "mintemail.com", "mohmal.com", "tempail.com", "emailondeck.com"}
+EMAIL_RX = re.compile(r"[^@\s]{1,64}@[^@\s]{1,190}\.[^@\s]{2,24}")
+
+
+def signup_enabled() -> bool:
+    """Sign-up needs working email and a public address to put in the links."""
+    from server import mailer
+    return mailer.configured() and bool(mailer.base_url())
+
+
+def _hash_token(t: str) -> str:
+    return hashlib.sha256(t.encode()).hexdigest()
+
+
+def _issue(c, user_id: str, purpose: str, ttl: int) -> str:
+    t = secrets.token_urlsafe(32)   # only the hash is stored, so a database leak does not leak working links
+    c.execute("INSERT INTO tokens(hash,user_id,purpose,expires) VALUES (?,?,?,?)", (_hash_token(t), user_id, purpose, time.time() + ttl))
+    c.commit()
+    return t
+
+
+def _consume(c, token: str, purpose: str) -> str:
+    h = _hash_token(token or "")
+    cur = c.execute("UPDATE tokens SET used=1 WHERE hash=? AND purpose=? AND used=0 AND expires>?", (h, purpose, time.time()))
+    c.commit()
+    if cur.rowcount != 1:  # unknown, wrong purpose, already used or expired: one message for all, nothing to probe
+        raise AuthError("This link is invalid or has expired. Please request a new one.", 400, code="bad_token")
+    return c.execute("SELECT user_id FROM tokens WHERE hash=?", (h,)).fetchone()["user_id"]
+
+
+def _mail_ok(c, email: str, kind: str, limit: int = 3, window: int = 3600) -> bool:
+    """At most `limit` emails of this kind per address per window (stops us being used to spam someone)."""
+    key = _attempt_key(email)
+    now = time.time()
+    c.execute("DELETE FROM mail_log WHERE at < ?", (now - 86400,))
+    n = c.execute("SELECT count(*) FROM mail_log WHERE key=? AND kind=? AND at>?", (key, kind, now - window)).fetchone()[0]
+    if n >= limit:
+        return False
+    c.execute("INSERT INTO mail_log(key,kind,at) VALUES (?,?,?)", (key, kind, now))
+    c.commit()
+    return True
+
+
+def _clean_name(name: str, email: str) -> str:
+    n = re.sub(r"[<>\x00-\x1f]", "", (name or "").strip())[:80]
+    return n or email.split("@")[0]
+
+
+def _captcha_ok(token: str | None, ip: str) -> bool:
+    secret_key = os.environ.get("TURNSTILE_SECRET")
+    if not secret_key:
+        return True        # optional: set TURNSTILE_SECRET (Cloudflare Turnstile) to require a CAPTCHA
+    if not token:
+        return False
+    try:
+        import urllib.parse
+        import urllib.request
+        data = urllib.parse.urlencode({"secret": secret_key, "response": token, "remoteip": ip}).encode()
+        with urllib.request.urlopen("https://challenges.cloudflare.com/turnstile/v0/siteverify", data, timeout=6) as r:
+            return bool(json.loads(r.read()).get("success"))
+    except Exception:
+        return False       # fail closed
+
+
+GENERIC_REGISTER = "If that email can be used, we have sent a link to confirm it. Check your inbox (and spam folder)."
+
+
+def register(request: Request, email: str, password: str, name: str, accept_terms: bool, captcha: str | None = None) -> dict:
+    from server import mailer
+    ip = client_ip(request)
+    limiter.hit(f"register:{ip}", 5, 3600)
+    if not signup_enabled():
+        raise AuthError("Sign-up is temporarily unavailable.", 503, code="signup_disabled")
+    email = (email or "").strip().lower()
+    if not EMAIL_RX.fullmatch(email) or len(email) > 254:
+        raise AuthError("Enter a valid email address.", 400)
+    if email.rsplit("@", 1)[1] in DISPOSABLE:
+        raise AuthError("Please use a permanent email address.", 400)
+    msg = check_password_policy(password or "", email)
+    if msg:
+        raise AuthError(msg, 400)
+    if accept_terms is not True:
+        raise AuthError("You need to accept the Terms and the Privacy Policy to create an account.", 400)
+    if not _captcha_ok(captcha, ip):
+        raise AuthError("Please complete the verification check and try again.", 400, code="captcha")
+    name = _clean_name(name, email)
+    pw_hash = hash_password(password)   # computed on every path so timing does not reveal whether the email exists
+    c = _db()
+    try:
+        row = c.execute("SELECT * FROM users WHERE email=?", (email,)).fetchone()
+        if row is None:
+            uid = uuid.uuid4().hex
+            c.execute("INSERT INTO users(id,email,name,pw_hash,created_at,email_verified,terms_accepted_at,terms_version) "
+                      "VALUES (?,?,?,?,?,0,?,?)", (uid, email, name, pw_hash, time.time(), time.time(), TERMS_VERSION))
+            c.commit()
+            if _mail_ok(c, email, "verify"):
+                link = f"{mailer.base_url()}/verify?token={_issue(c, uid, 'verify', 86400)}"
+                mailer.send(email, *mailer.verify_email_text(name, link))
+        elif not row["email_verified"]:
+            if _mail_ok(c, email, "verify"):   # they never confirmed: send a fresh link, change nothing else
+                link = f"{mailer.base_url()}/verify?token={_issue(c, row['id'], 'verify', 86400)}"
+                mailer.send(email, *mailer.verify_email_text(row["name"], link))
+        else:   # already has an account: tell the owner, never the requester
+            if _mail_ok(c, email, "notice"):
+                mailer.send(email, "Someone tried to create a LexBharat account with your email",
+                            "Hello,\n\nSomeone tried to sign up with this email address, but you already have an account.\n"
+                            f"If it was you, sign in here, or use 'Forgot password' if you cannot remember it:\n{mailer.base_url()}/signin\n\n"
+                            "If it was not you, no action is needed.")
+    finally:
+        c.close()
+    return {"message": GENERIC_REGISTER}
+
+
+def verify_email(request: Request, token: str) -> dict:
+    limiter.hit(f"verify:{client_ip(request)}", 30, 3600)
+    c = _db()
+    try:
+        uid = _consume(c, token, "verify")
+        c.execute("UPDATE users SET email_verified=1 WHERE id=?", (uid,))
+        c.commit()
+    finally:
+        c.close()
+    return {"verified": True}
+
+
+def resend_verification(request: Request, email: str) -> dict:
+    from server import mailer
+    limiter.hit(f"resend:{client_ip(request)}", 6, 3600)
+    email = (email or "").strip().lower()
+    c = _db()
+    try:
+        row = c.execute("SELECT * FROM users WHERE email=?", (email,)).fetchone() if signup_enabled() and EMAIL_RX.fullmatch(email) else None
+        if row is not None and not row["email_verified"] and _mail_ok(c, email, "verify"):
+            link = f"{mailer.base_url()}/verify?token={_issue(c, row['id'], 'verify', 86400)}"
+            mailer.send(email, *mailer.verify_email_text(row["name"], link))
+    finally:
+        c.close()
+    return {"message": GENERIC_REGISTER}
+
+
+def forgot_password(request: Request, email: str) -> dict:
+    from server import mailer
+    limiter.hit(f"forgot:{client_ip(request)}", 8, 3600)
+    email = (email or "").strip().lower()
+    c = _db()
+    try:
+        row = c.execute("SELECT * FROM users WHERE email=?", (email,)).fetchone() if signup_enabled() and EMAIL_RX.fullmatch(email) else None
+        if row is not None and not row["disabled"] and _mail_ok(c, email, "reset"):
+            link = f"{mailer.base_url()}/reset-password?token={_issue(c, row['id'], 'reset', 3600)}"
+            mailer.send(email, *mailer.reset_email_text(row["name"], link))
+    finally:
+        c.close()
+    return {"message": "If there is an account for that email, we have sent a link to reset the password."}
+
+
+def reset_password(request: Request, token: str, new_password: str) -> dict:
+    limiter.hit(f"reset:{client_ip(request)}", 10, 3600)
+    c = _db()
+    try:
+        row = None
+        h = _hash_token(token or "")
+        t = c.execute("SELECT user_id FROM tokens WHERE hash=? AND purpose='reset' AND used=0 AND expires>?", (h, time.time())).fetchone()
+        if t:
+            row = c.execute("SELECT * FROM users WHERE id=?", (t["user_id"],)).fetchone()
+        msg = check_password_policy(new_password or "", row["email"] if row else "")
+        if msg and row:        # report a weak password without spending the link, so they can try again
+            raise AuthError(msg, 400)
+        uid = _consume(c, token, "reset")
+        row = c.execute("SELECT * FROM users WHERE id=?", (uid,)).fetchone()
+        if row is None or row["disabled"]:
+            raise AuthError("This link is invalid or has expired. Please request a new one.", 400, code="bad_token")
+        # new password, sign out everywhere, and the click proved they own the mailbox
+        c.execute("UPDATE users SET pw_hash=?, token_version=token_version+1, email_verified=1 WHERE id=?", (hash_password(new_password), uid))
+        c.execute("DELETE FROM attempts WHERE key=?", (_attempt_key(row["email"]),))
+        c.commit()
+    finally:
+        c.close()
+    return {"reset": True}
+
+
+# ----------------------------------------------------------------------------- usage limits
+def use_quota(user_id: str, kind: str, limit: int, global_limit: int | None = None) -> None:
+    """Count one use today; refuse when the user's (or the whole site's) daily allowance is spent."""
+    day = time.strftime("%Y-%m-%d", time.gmtime())
+    c = _db()
+    try:
+        if global_limit:
+            g = c.execute("SELECT COALESCE(SUM(n),0) FROM usage WHERE day=? AND kind=?", (day, kind)).fetchone()[0]
+            if g >= global_limit:
+                raise AuthError("We're at capacity for today. Please try again tomorrow.", 429, code="site_capacity")
+        r = c.execute("SELECT n FROM usage WHERE user_id=? AND day=? AND kind=?", (user_id, day, kind)).fetchone()
+        if r and r["n"] >= limit:
+            raise AuthError(f"You've used today's {limit} free questions. Your allowance resets at midnight UTC.", 429, code="daily_limit")
+        c.execute("INSERT INTO usage(user_id,day,kind,n) VALUES (?,?,?,1) ON CONFLICT(user_id,day,kind) DO UPDATE SET n=n+1", (user_id, day, kind))
+        c.commit()
+    finally:
+        c.close()
+
+
+# ----------------------------------------------------------------------------- profile, export, deletion
+PROFILE_KEYS = ("preferredLanguage", "homeCourtType", "homeCourtState", "homeCourtId")
+
+
+def update_profile(row, data: dict) -> dict:
+    cur = _profile_fields(row)
+    for k in PROFILE_KEYS:
+        if k in data and isinstance(data[k], str):
+            cur[k] = data[k].strip()[:64]
+    c = _db()
+    try:
+        c.execute("UPDATE users SET profile=? WHERE id=?", (json.dumps(cur), row["id"]))
+        c.commit()
+    finally:
+        c.close()
+    return cur
+
+
+def _iso(ts):
+    return time.strftime("%Y-%m-%dT%H:%M:%S.000Z", time.gmtime(ts)) if ts else None
+
+
+def deletion_status(row) -> dict:
+    sched = row["deletion_scheduled_at"]
+    return {"isScheduled": bool(sched), "requestedAt": _iso(row["deletion_requested_at"]), "scheduledAt": _iso(sched),
+            "daysRemaining": max(0, int((sched - time.time()) // 86400) + 1) if sched else None}
+
+
+def request_deletion(row) -> dict:
+    from server import mailer
+    now = time.time()
+    c = _db()
+    try:
+        c.execute("UPDATE users SET deletion_requested_at=?, deletion_scheduled_at=? WHERE id=?",
+                  (now, now + DELETION_GRACE_DAYS * 86400, row["id"]))
+        c.commit()
+        row = c.execute("SELECT * FROM users WHERE id=?", (row["id"],)).fetchone()
+    finally:
+        c.close()
+    if mailer.configured():
+        mailer.send(row["email"], *mailer.deletion_email_text(row["name"], DELETION_GRACE_DAYS))
+    return deletion_status(row)
+
+
+def cancel_deletion(row) -> None:
+    c = _db()
+    try:
+        c.execute("UPDATE users SET deletion_requested_at=NULL, deletion_scheduled_at=NULL WHERE id=?", (row["id"],))
+        c.commit()
+    finally:
+        c.close()
+
+
+def account_export(row) -> dict:
+    return {"account": {"id": row["id"], "email": row["email"], "name": row["name"], "createdAt": _iso(row["created_at"]),
+                        "lastLogin": _iso(row["last_login"]), "emailVerified": bool(row["email_verified"]),
+                        "termsAcceptedAt": _iso(row["terms_accepted_at"]), "termsVersion": row["terms_version"]},
+            "profile": _profile_fields(row), "exportedAt": _iso(time.time())}
+
+
+def erase_user(user_id: str) -> None:
+    """Remove the account itself. Callers remove the user's chats and documents too."""
+    c = _db()
+    try:
+        c.execute("DELETE FROM tokens WHERE user_id=?", (user_id,))
+        c.execute("DELETE FROM usage WHERE user_id=?", (user_id,))
+        c.execute("DELETE FROM users WHERE id=?", (user_id,))
+        c.commit()
+    finally:
+        c.close()
+
+
+def due_for_deletion() -> list[str]:
+    c = _db()
+    try:
+        return [r["id"] for r in c.execute("SELECT id FROM users WHERE deletion_scheduled_at IS NOT NULL AND deletion_scheduled_at<=?", (time.time(),))]
+    finally:
+        c.close()

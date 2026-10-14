@@ -1,0 +1,95 @@
+[
+ {
+  "id": "S04",
+  "cat": "statute",
+  "q": "What is the punishment for theft under section 303 of the BNS?",
+  "pass": true,
+  "checks": {
+   "retrieval": true,
+   "facts": true,
+   "citations": true,
+   "no_error": true
+  },
+  "answer": "Under section 303 of the Bharatiya Nyaya Sanhita, 2023 (BNS), the punishment for theft is as follows:\n\n- For the first conviction, the offender may be punished with imprisonment of either description for a term which may extend to three years, or with fine, or with both.\n- For second or subsequent convictions, the offender shall be punished with rigorous imprisonment for a term which shall not be less than one year but which may extend to five years, and with fine. [BNS § 303(2)]",
+  "retrieved": [
+   "BNS § 303",
+   "IPC § 378"
+  ],
+  "t_retrieve": 0.0,
+  "t_answer": 9.0
+ },
+ {
+  "id": "C01",
+  "cat": "case",
+  "q": "What did the Supreme Court hold in Maneka Gandhi v. Union of India?",
+  "pass": false,
+  "checks": {
+   "retrieval": true,
+   "facts": false,
+   "citations": true,
+   "no_error": true
+  },
+  "answer": "The Supreme Court in Maneka Gandhi v. Union of India held that the principles of natural justice, including the rule of audi alteram partem (hearing the other side), apply to administrative orders. Specifically, the court stated that a passport may be impounded without notice, but before any final order is passed, the rule of audi alteram partem would apply, and the holder of the passport will have to be heard. The court also noted that there is a statutory right to continue a passport's effectiveness unless grounds for revocation or impounding arise.\n\n[Maneka Gandhi v. Union of India, [1978] 2 S.C.R. 621, p. 21, 34]",
+  "retrieved": [
+   "1978_INSC_16",
+   "1996_INSC_1420"
+  ],
+  "t_retrieve": 4.3,
+  "t_answer": 13.2
+ },
+ {
+  "id": "C02",
+  "cat": "case",
+  "q": "What is the basic structure doctrine in Kesavananda Bharati?",
+  "pass": true,
+  "checks": {
+   "retrieval": true,
+   "facts": true,
+   "citations": true,
+   "no_error": true
+  },
+  "answer": "The basic structure doctrine, as articulated in the case of His Holiness Kesavananda Bharati Sripadagalavaru versus State of Kerala, [1973] SUPP. 1 S.C.R. 1, holds that the power to amend the Constitution under Article 368 does not permit the destruction or alteration of the basic structure or framework of the Constitution. The doctrine emphasizes that while amendments can adapt the system to changing conditions, they cannot fundamentally alter the democratic, secular, and federal character of the state. The court noted that the Preamble, while part of the Constitution, does not impose any implied limitations on the power of amendment, except for the basic structure.\n\n[Excerpts from HIS HOLINESS KESAVANANDA BHARATI SRIPADAGALAVARU versus STATE OF KERALA, [1973] SUPP. 1 S.C.R. 1, pages 670-671]",
+  "retrieved": [
+   "1973_INSC_91"
+  ],
+  "t_retrieve": 1.1,
+  "t_answer": 14.1
+ },
+ {
+  "id": "C05",
+  "cat": "case",
+  "q": "What did the court decide in Gurbaksh Singh Sibbia about anticipatory bail?",
+  "pass": false,
+  "checks": {
+   "retrieval": false,
+   "facts": true,
+   "citations": true,
+   "no_error": true
+  },
+  "answer": "The court in [Gurbaksh Singh Sibbia v. State of Punjab, [1980] 3 S.C.R. 472, p. 504] held that the grant of anticipatory bail is a matter of discretion, and the court must consider the nature of the offense, the character of the accused, and the likelihood of the accused interfering with the course of justice. However, since the Indian Penal Code and the Indian Evidence Act were repealed and replaced by the Bharatiya Nagarik Suraksha Sanhita, 2023 (BNSS) and Bharatiya Sakshya Adhiniyam, 2023 (BSA) from 1 July 2024, this decision does not directly apply to the current legal framework. For guidance under the new codes, you should refer to [BNSS § 482].",
+  "retrieved": [
+   "BNSS § 482"
+  ],
+  "t_retrieve": 0.0,
+  "t_answer": 11.5
+ },
+ {
+  "id": "C10",
+  "cat": "case",
+  "q": "What did the Supreme Court hold in Minerva Mills v. Union of India?",
+  "pass": false,
+  "checks": {
+   "retrieval": true,
+   "facts": false,
+   "citations": true,
+   "no_error": true
+  },
+  "answer": "The Supreme Court in Minerva Mills Ltd. & Ors. versus Union of India & Ors. held that the objectives of the Directive Principles of State Policy are not to be taken as a mere general statement but must have a real and substantial connection with the specific objectives contained within them. The Court also emphasized that Article 38 of the Constitution, which stresses the obligation of the State to establish a social order, requires the State to promote the welfare of the people for securing and protecting a particular type of social order that ensures social, economic, and political justice for all.\n\n[MINERVA MILLS LTD. & ORS. versus UNION OF INDIA & ORS., [1981] 1 S.C.R. 206, p. 341A-C]",
+  "retrieved": [
+   "1980_INSC_142",
+   "1953_INSC_61"
+  ],
+  "t_retrieve": 5.3,
+  "t_answer": 15.3
+ }
+]

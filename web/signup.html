@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex">
+<meta name="color-scheme" content="light dark"><title>Create your account · LexBharat</title>
+<link rel="stylesheet" href="/auth.css">
+</head>
+<body>
+<main>
+  <h1 class="brand">LexBharat</h1>
+  <p class="sub">Create a free account.</p>
+  <form id="f" novalidate>
+    <div id="msg" class="msg" role="alert" aria-live="polite"></div>
+    <label for="name">Your name</label>
+    <input id="name" name="name" type="text" autocomplete="name" maxlength="80" required autofocus>
+    <label for="email">Email</label>
+    <input id="email" name="email" type="email" autocomplete="email" inputmode="email" required>
+    <label for="pw">Password</label>
+    <input id="pw" name="password" type="password" autocomplete="new-password" minlength="12" required>
+    <p class="hint">At least 12 characters. A few random words work well.</p>
+    <label for="pw2">Repeat password</label>
+    <input id="pw2" name="password2" type="password" autocomplete="new-password" required>
+    <label class="check" for="terms"><input id="terms" type="checkbox" required>
+      <span>I agree to the <a href="/terms-conditions" target="_blank" rel="noopener">Terms of Service</a> and have read the
+      <a href="/privacy-policy" target="_blank" rel="noopener">Privacy Policy</a>. I understand LexBharat is a research aid and not legal advice.</span></label>
+    <div id="captcha" style="margin-bottom:14px"></div>
+    <button id="go" class="primary" type="submit">Create account</button>
+  </form>
+  <p class="note">Already have an account? <a id="signin" href="/signin">Sign in</a></p>
+</main>
+<script src="/auth.js"></script>
+<script>
+(function () {
+  var L = window.LB, $ = L.$, captchaToken = null;
+  $("signin").href = "/signin" + L.suffix;
+
+  fetch("/api/auth/config").then(function (r) { return r.json(); }).then(function (c) {
+    if (!c.signupEnabled) { L.show("Sign-up isn't open yet. Please check back soon."); $("go").disabled = true; }
+    if (c.captchaSiteKey) {          // optional Cloudflare Turnstile, only when the operator configured it
+      var s = document.createElement("script"); s.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?onload=lbCaptcha"; s.async = true; document.head.appendChild(s);
+      window.lbCaptcha = function () { window.turnstile.render("#captcha", { sitekey: c.captchaSiteKey, callback: function (t) { captchaToken = t; } }); };
+    }
+  }).catch(function () {});
+
+  $("f").addEventListener("submit", async function (ev) {
+    ev.preventDefault(); L.show("");
+    var name = $("name").value.trim(), email = $("email").value.trim(), pw = $("pw").value;
+    if (!name || !email || !pw) { L.show("Fill in every field."); return; }
+    if (pw.length < 12) { L.show("Password must be at least 12 characters."); return; }
+    if (pw !== $("pw2").value) { L.show("The two passwords do not match."); return; }
+    if (!$("terms").checked) { L.show("Please accept the Terms and the Privacy Policy to continue."); return; }
+    $("go").disabled = true; $("go").textContent = "Creating…";
+    try {
+      var j = await L.post("/api/auth/register", { name: name, email: email, password: pw, acceptTerms: true, captchaToken: captchaToken });
+      if (j._status === 429) { L.show(L.wait(j)); }
+      else if (j._status !== 200 || !j.success) { L.show(j.error || "Could not create the account."); if (window.turnstile) window.turnstile.reset(); captchaToken = null; }
+      else {
+        $("f").outerHTML = "<div class='card'><h2 style='margin:0 0 8px;font-size:20px'>Check your email</h2><p style='margin:0 0 12px'>" +
+          "We sent a link to confirm your address. It works once and expires in 24 hours.</p>" +
+          "<p class='hint' style='margin:0'>Nothing yet? Look in your spam folder, or <a href='/signin" + L.suffix + "'>sign in</a> and ask us to send it again.</p></div>";
+        return;
+      }
+    } catch (x) { L.show("Could not reach the server. Check your connection and try again."); }
+    $("go").disabled = false; $("go").textContent = "Create account";
+  });
+})();
+</script>
+</body>
+</html>
