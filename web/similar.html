@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Similar cases</title>
+<style>
+  :root { --bg:#fff; --fg:#1d1d1f; --mut:#6b6b70; --line:#e4e4e7; --acc:#c4561a; --card:#fafafa; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#161618; --fg:#f2f2f3; --mut:#9a9aa1; --line:#2c2c30; --card:#1e1e21; } }
+  * { box-sizing:border-box }
+  body { margin:0; background:var(--bg); color:var(--fg); font:15px/1.5 system-ui,-apple-system,sans-serif }
+  main { max-width:760px; margin:0 auto; padding:24px 16px 64px }
+  h1 { font-size:20px; margin:0 0 4px } p.sub { color:var(--mut); margin:0 0 16px }
+  form { display:flex; gap:8px } input { flex:1; padding:10px 12px; border:1px solid var(--line); border-radius:8px; background:var(--bg); color:var(--fg); font:inherit }
+  button { padding:10px 14px; border:0; border-radius:8px; background:var(--acc); color:#fff; font:inherit; cursor:pointer }
+  ul { list-style:none; padding:0; margin:16px 0 0 } li { border:1px solid var(--line); background:var(--card); border-radius:10px; padding:12px 14px; margin-bottom:8px }
+  li .t { font-weight:600 } li .m { color:var(--mut); font-size:13px } li .a { margin-top:6px; font-size:13px; display:flex; gap:12px; flex-wrap:wrap }
+  a, .lnk { color:var(--acc); cursor:pointer; text-decoration:none } .lnk:hover, a:hover { text-decoration:underline }
+  h2 { font-size:15px; margin:22px 0 0; color:var(--mut); font-weight:600 } .err { color:#c0392b; margin-top:12px }
+</style>
+</head>
+<body>
+<main>
+  <h1>Similar cases</h1>
+  <p class="sub">Search the Supreme Court index, then open a case's closest matches and citation graph. Local copy, no external calls.</p>
+  <form id="f"><input id="q" placeholder="Case name, party, or citation, e.g. kesavananda" autofocus><button>Search</button></form>
+  <div id="err" class="err"></div>
+  <h2 id="h1"></h2><ul id="res"></ul>
+  <h2 id="h2"></h2><ul id="sim"></ul>
+  <h2 id="h3"></h2><ul id="cit"></ul>
+</main>
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;" }[c]));
+async function api(p) { const r = await fetch(p); if (!r.ok) throw new Error((await r.json().catch(() => ({}))).detail || r.status); return r.json(); }
+function row(d, extra) {
+  return `<li><div class="t">${esc(d.title)}</div><div class="m">${esc(d.citation || d.matchedCitation || "")} · ${esc((d.publishdate || d.year || "").toString().slice(0,10))} ${d.score ? "· similarity " + d.score : ""}</div>${extra || ""}</li>`;
+}
+function actions(id) {
+  return `<div class="a"><span class="lnk" onclick="open_('${id}')">Similar cases</span><span class="lnk" onclick="graph('${id}')">Cites / cited by</span></div>`;
+}
+$("f").onsubmit = async e => {
+  e.preventDefault(); $("err").textContent = ""; $("sim").innerHTML = $("cit").innerHTML = ""; $("h2").textContent = $("h3").textContent = "";
+  try {
+    const r = (await api("/api/research/citation-graph/lookup?q=" + encodeURIComponent($("q").value) + "&limit=10")).results;
+    $("h1").textContent = r.length ? "Matches" : "No matches";
+    $("res").innerHTML = r.map(d => row(d, actions(d.docId))).join("");
+  } catch (x) { $("err").textContent = x.message; }
+};
+async function open_(id) {
+  $("err").textContent = ""; $("h2").textContent = "Finding similar cases..."; $("sim").innerHTML = "";
+  try {
+    const r = await api("/api/research/similar/" + encodeURIComponent(id) + "?limit=10");
+    $("h2").textContent = "Most similar cases";
+    $("sim").innerHTML = r.docs.map(d => row(d, actions(d.docId))).join("");
+  } catch (x) { $("h2").textContent = ""; $("err").textContent = x.message; }
+}
+async function graph(id) {
+  $("err").textContent = ""; $("h3").textContent = "Loading citations..."; $("cit").innerHTML = "";
+  try {
+    const g = await api("/api/research/citation-graph/graph?docId=" + encodeURIComponent(id) + "&depth=1&maxCases=200");
+    if (g.error) throw new Error(g.message);
+    const byId = Object.fromEntries(g.nodes.map(n => [n.docId, n]));
+    const out = g.edges.filter(e => e.from === id).map(e => byId[e.to]).filter(Boolean);
+    const inn = g.edges.filter(e => e.to === id).map(e => byId[e.from]).filter(Boolean);
+    $("h3").textContent = `Cites ${out.length} · cited by ${g.root.citedByCount} (showing ${inn.length})`;
+    const sect = (t, a) => a.length ? `<li><div class="t">${t}</div>${a.map(n => `<div class="m"><span class="lnk" onclick="open_('${n.docId}')">${esc(n.title)}</span> · ${esc(n.citation || "")}</div>`).join("")}</li>` : "";
+    $("cit").innerHTML = sect("This case cites", out) + sect("Cited by", inn);
+  } catch (x) { $("h3").textContent = ""; $("err").textContent = x.message; }
+}
+</script>
+</body>
+</html>

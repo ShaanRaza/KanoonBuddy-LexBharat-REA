@@ -1,0 +1,1 @@
+import{W as e}from"./index-Ac-JwDP4.js";import"./modulepreload-polyfill-B5Qt9EMX.js";import"./react-vendor-9b-Fppbo.js";import"./mermaid-Iu9CgLAS.js";import"./icons-CYH3BR3F.js";import"./motion-DRT_oqBn.js";class s extends e{async requestReview(){throw this.unimplemented("Not implemented on web.")}}export{s as InAppReviewWeb};

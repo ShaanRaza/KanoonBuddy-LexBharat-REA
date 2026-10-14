@@ -1,0 +1,51 @@
+{
+  "short_name": "LexBharat",
+  "name": "LexBharat India – Operating System for Modern Indian Law",
+  "icons": [
+    {
+      "src": "/favicon-48x48.png",
+      "type": "image/png",
+      "sizes": "48x48",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/favicon-96x96.png",
+      "type": "image/png",
+      "sizes": "96x96",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/lawcentral-icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/lawcentral-icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#ffffff",
+  "background_color": "#FFFFFF",
+  "categories": [
+    "productivity",
+    "business"
+  ],
+  "prefer_related_applications": true,
+  "related_applications": [
+    {
+      "platform": "play",
+      "url": "https://play.google.com/store/apps/details?id=com.lawcentral.app",
+      "id": "com.lawcentral.app"
+    },
+    {
+      "platform": "itunes",
+      "url": "https://apps.apple.com/us/app/law-central/id6760490323",
+      "id": "id6760490323"
+    }
+  ]
+}

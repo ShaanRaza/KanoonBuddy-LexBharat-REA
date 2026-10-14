@@ -1,0 +1,56 @@
+# Allow all bots to crawl the public site. The AI answer engines are named so
+# the intent is explicit; consecutive User-agent lines share this one group, so
+# every Disallow below applies to them too (a separate group would drop them).
+User-agent: *
+User-agent: GPTBot
+User-agent: OAI-SearchBot
+User-agent: ChatGPT-User
+User-agent: ClaudeBot
+User-agent: Claude-SearchBot
+User-agent: PerplexityBot
+User-agent: Google-Extended
+User-agent: Bingbot
+Allow: /
+
+# Disallow private/app-only routes
+Disallow: /dashboard
+Disallow: /settings
+Disallow: /api/
+Disallow: /cases
+Disallow: /editor
+Disallow: /research-v2
+Disallow: /calendar
+
+# Allow public pages explicitly
+Allow: /tools
+Allow: /docs
+Allow: /blog
+Allow: /about
+Allow: /contact
+Allow: /privacy-policy
+Allow: /terms-conditions
+Allow: /security
+Allow: /whatsapp
+Allow: /app
+Allow: /mobile
+Allow: /rent-agreement
+Allow: /legal-notice
+Allow: /cheque-bounce
+Allow: /affidavit
+Allow: /consumer-complaint
+Allow: /delete-data
+Allow: /refund-policy
+Allow: /acceptable-use
+Allow: /get-demo
+Allow: /firms
+Allow: /findmylawyer
+Allow: /pricing
+Allow: /cause-list
+Allow: /llms.txt
+
+# Sitemap locations
+Sitemap: https://lexbharat.ai/sitemap.xml
+Sitemap: https://lexbharat.ai/sitemap-lawyers.xml
+
+# Crawl delay for politeness
+Crawl-delay: 1

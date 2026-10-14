@@ -1,0 +1,1 @@
+import{i as o}from"./index-Ac-JwDP4.js";async function t(a){const n=await o.post("/api/onboarding/profile",a);return{user:n.data,team:n.team??null}}async function i(a){return(await o.put("/api/onboarding/professional-details",a)).data}async function r(a){return(await o.post("/api/onboarding/documents",a)).data}export{r as a,t as s,i as u};
