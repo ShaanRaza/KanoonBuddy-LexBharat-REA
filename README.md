@@ -4,7 +4,7 @@ A private, local build of the LexBharat legal-research web app, running on the
 [Open India Law](https://huggingface.co/datasets/vaquill/open-india-law) corpus instead of the
 original hosted data, with a local-model assistant (Nyra).
 
-> **Status: private and local only. Do not deploy publicly yet.** See [Before any deployment](#before-any-deployment).
+> **Status: private build. Authentication is in place; read [Before any deployment](#before-any-deployment) before putting it on the internet.**
 
 ## What works
 
@@ -18,7 +18,7 @@ original hosted data, with a local-model assistant (Nyra).
 | Nyra chat | Local Ollama model, grounded in retrieved statute sections and judgment passages, with citation checks |
 
 Not built: free-text semantic search (the stored vectors are Voyage `voyage-4` embeddings, so queries need the
-Voyage API), cause lists, drafting, attachments, High Court judgments, real authentication and billing.
+Voyage API), cause lists, drafting, attachments, High Court judgments, payments, and sign-in by Google or phone.
 
 ## Requirements
 
@@ -40,11 +40,39 @@ python3 -m venv .venv && ./.venv/bin/pip install -r requirements.txt
 ./run.sh        # http://localhost:8000
 ```
 
+## Authentication
+
+Invite-only email and password. There is **no public sign-up**; an administrator creates accounts.
+
+```bash
+# create / manage accounts (set LEXBHARAT_ENV=dev if you are running in dev mode)
+./.venv/bin/python -m server.manage_users add you@example.com --name "Your Name"   # prompts for a password
+./.venv/bin/python -m server.manage_users add you@example.com --generate           # prints a random one, once
+./.venv/bin/python -m server.manage_users list | passwd | disable | enable | delete
+```
+
+- Passwords: scrypt with a per-user salt, minimum 12 characters. Unknown emails cost the same as wrong passwords,
+  so responses do not reveal which emails exist.
+- Sessions: signed HS256 tokens (8 h, refreshable for up to 7 days after expiry, hard cap 30 days per login).
+  Logout, password change and disabling an account revoke tokens.
+- Every `/api/*` route needs a token except login, refresh, logout, health, and read-only statute pages (rate limited by IP).
+- Lockout: 5 failed logins per email locks it for 15 minutes (the same for emails that do not exist); 10 attempts a minute per IP.
+- Nyra chats are private to the account that created them.
+- Limits: 12 chat messages a minute per user, 4,000 characters per message, 2 simultaneous model runs, 1 MB request bodies.
+- Headers: CSP, `X-Frame-Options`, `nosniff`, HSTS (production), `Cache-Control: no-store` on the API. API docs are disabled.
+- `LEXBHARAT_ENV` defaults to **production**, which **refuses to start** without `LEXBHARAT_SECRET` (32+ characters).
+  `./run.sh` sets `LEXBHARAT_ENV=dev` for local use. See `.env.example`.
+
+Tests: `LEXBHARAT_ENV=dev ./.venv/bin/python -m unittest tests.test_auth -v` (30 tests, throwaway database).
+
 ## Layout
 
 - `web/` the saved front end (static build) with its API base patched to same-origin
 - `server/main.py` the FastAPI app: statutes, cases, citations, stubs for everything else
-- `server/nyra.py` the chat assistant (retrieval, prompt, SSE streaming, history)
+- `server/auth.py`, `server/manage_users.py` authentication and the admin tool
+- `server/nyra.py` the chat assistant (retrieval, prompt, SSE streaming, per-user history)
+- `web/signin.html` the sign-in page (the original Google/phone login screen is replaced)
+- `tests/` authentication tests
 - `server/build_*.py` one-time index builders
 - `data/endpoints_all.txt` the API paths the front end calls
 
@@ -62,11 +90,27 @@ python3 -m venv .venv && ./.venv/bin/pip install -r requirements.txt
 
 ## Before any deployment
 
-- Replace the stub authentication and the always-active subscription fixture with real ones.
-- Decide where the model runs. Local small models can paraphrase or embellish, so keep the "not legal advice"
-  framing and the citation checks.
-- Remove or replace the original site's public identifiers listed above.
-- Credit the dataset (below). Also check the terms of any other source you add.
+Done: authentication, per-user chats, rate limits, request limits, security headers, fail-fast configuration.
+
+Still needed:
+
+- **HTTPS.** Run behind a TLS-terminating reverse proxy (Caddy, nginx, a cloud load balancer). Set `TRUST_PROXY=1`
+  only if the proxy overwrites `X-Forwarded-For`. Never expose uvicorn or Ollama directly.
+- **Where the model runs.** The app needs the 50 GB corpus and an Ollama model on the same host or reachable
+  over a private network. A small local model is slow (10 to 20 s per answer) and can paraphrase or embellish,
+  so keep the "not legal advice" framing and the citation checks.
+- **Single process.** Rate limits live in memory, so run one worker, or move them to Redis before scaling out.
+- **Accounts and backups.** `data/auth.sqlite` holds the password hashes. Back it up and keep it out of git.
+  There is no self-service password reset or email verification; an administrator resets passwords.
+- **Tokens live in the browser's localStorage** (that is how the front end works). The CSP limits script injection,
+  but a stored-XSS bug would expose them. Moving to HttpOnly cookies means changing the front end.
+- **The subscription and entitlement endpoints are fixtures** that report an active plan to every signed-in user.
+  Real billing is not built.
+- **Original site content.** The saved front end still contains the original's public identifiers (Razorpay key ID,
+  Google client IDs, reCAPTCHA key), marketing claims (for example "10,000+ advocates") and page text such as
+  "Text checked against the Gazette". Review and replace these for your own product.
+- **Domains** `lexbharat.ai` and `@lexbharat.in` are placeholders.
+- **Credit the dataset** (below) and check the terms of any other source you add.
 
 ## Data attribution
 

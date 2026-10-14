@@ -9,8 +9,10 @@ import threading
 from pathlib import Path
 
 import duckdb
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.responses import FileResponse, JSONResponse
+
+from server import auth  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 WEB = ROOT / "web"
@@ -34,7 +36,62 @@ ACT_CODES = {
 REPEALED = {"IPC", "IEA"}  # superseded by BNS / BSA
 ALIASES = {"EVIDENCE": "IEA", "SAKSHYA": "BSA", "CRPC": "BNSS", "NI": "NIA", "NIACT": "NIA"}
 
-app = FastAPI(title="lawcentral-copy")
+app = FastAPI(
+    title="LexBharat",
+    docs_url=None, redoc_url=None, openapi_url=None,   # no public schema/Swagger UI
+    dependencies=[Depends(auth.guard)],                # every route: /api needs a token unless public
+)
+
+
+@app.exception_handler(auth.AuthError)
+async def _auth_error(request: Request, exc: auth.AuthError):
+    # {"error": ...} is the shape the front end reads; 401 makes it sign the user out
+    return JSONResponse({"error": exc.message}, status_code=exc.status, headers=exc.headers)
+
+
+class SecurityHeaders:
+    """Pure ASGI middleware (safe for streaming responses): hardening headers + request size cap."""
+
+    CSP = ("default-src 'self'; script-src 'self' 'unsafe-inline'; "
+           "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+           "font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; "
+           "media-src 'self' blob: https:; connect-src 'self'; worker-src 'self' blob:; frame-src 'none'; "
+           "frame-ancestors 'self'; base-uri 'self'; form-action 'self'; object-src 'none'")
+    MAX_BODY = 1_000_000
+
+    def __init__(self, app):
+        self.app = app
+
+    async def __call__(self, scope, receive, send):
+        if scope["type"] != "http":
+            return await self.app(scope, receive, send)
+        for k, v in scope.get("headers", []):
+            if k == b"content-length" and v.isdigit() and int(v) > self.MAX_BODY:
+                body = b'{"error":"Request too large"}'
+                await send({"type": "http.response.start", "status": 413,
+                            "headers": [(b"content-type", b"application/json"), (b"content-length", str(len(body)).encode())]})
+                return await send({"type": "http.response.body", "body": body})
+
+        async def send_with_headers(msg):
+            if msg["type"] == "http.response.start":
+                h = msg.setdefault("headers", [])
+                extra = {b"x-content-type-options": b"nosniff", b"x-frame-options": b"SAMEORIGIN",
+                         b"referrer-policy": b"strict-origin-when-cross-origin",
+                         b"permissions-policy": b"camera=(), microphone=(self), geolocation=()",
+                         b"content-security-policy": self.CSP.encode(),
+                         b"cross-origin-opener-policy": b"same-origin"}
+                if auth.env() == "production":
+                    extra[b"strict-transport-security"] = b"max-age=31536000; includeSubDomains"
+                if scope.get("path", "").startswith("/api/"):
+                    extra[b"cache-control"] = b"no-store"  # never cache personal or authenticated API data
+                present = {k.lower() for k, _ in h}
+                h.extend((k, v) for k, v in extra.items() if k not in present)
+            await send(msg)
+
+        await self.app(scope, receive, send_with_headers)
+
+
+app.add_middleware(SecurityHeaders)
 _base = duckdb.connect(":memory:")
 _tl = threading.local()
 
@@ -91,6 +148,7 @@ def load_cases() -> None:
 
 @app.on_event("startup")
 def startup() -> None:
+    auth.init()  # raises if LEXBHARAT_SECRET is missing in production
     if not CORPUS.exists():
         print(f"WARNING: corpus not found at {CORPUS} - legal-data endpoints will 503")
         return
@@ -636,45 +694,72 @@ nyra.register(app, sys.modules[__name__])  # before the catch-all /api/* stubs s
 
 
 # --------------------------------------------------------------------------- stubs
-# Fixture user for the local copy. The front end's route guards require a role, a verified
-# contact and a completed onboarding timestamp (no real sign-in happens locally).
-USER = {"id": "local-user", "_id": "local-user", "email": "local@example.com", "name": "Local User",
-        "role": "advocate", "emailVerified": True, "phoneVerified": True,
-        "onboardingCompletedAt": "2026-01-01T00:00:00.000Z", "onboardingComplete": True,
-        "subscription": {"status": "active", "plan": "local", "trialEndsAt": None}}
-
-
 @app.get("/api/health")
 def health():
-    return {"ok": True, **_ready}
+    return {"ok": True}  # public liveness probe: deliberately reveals nothing else
+
+
+@app.get("/api/health/status")
+def health_status():
+    return {"ok": True, **_ready}  # requires a token
 
 
 @app.get("/api/me")
-def me():
-    return USER
+def me(request: Request):
+    return auth.public_user(request.state.user)
+
+
+@app.post("/api/auth/login")
+async def auth_login(request: Request):
+    try:
+        body = await request.json()
+    except Exception:
+        raise auth.AuthError("Invalid request", 400)
+    if not isinstance(body, dict):
+        raise auth.AuthError("Invalid request", 400)
+    data = auth.login(request, str(body.get("email", "")), str(body.get("password", "")))
+    return {"success": True, "data": data}
+
+
+@app.post("/api/auth/refresh")
+def auth_refresh(request: Request):
+    return {"success": True, "data": auth.refresh(request)}
+
+
+@app.post("/api/auth/logout")
+def auth_logout(request: Request):
+    auth.logout(request)
+    return {"success": True}
+
+
+@app.post("/api/auth/change-password")
+async def auth_change_password(request: Request):
+    body = await request.json()
+    auth.change_password(request.state.user, str(body.get("currentPassword", "")), str(body.get("newPassword", "")))
+    return {"success": True}
+
+
+@app.api_route("/api/auth/{rest:path}", methods=["GET", "POST", "PUT", "PATCH", "DELETE"])
+def auth_unknown(rest: str):
+    raise HTTPException(404, "Not found")  # no Google / phone sign-in: never hand out tokens by default
 
 
 @app.get("/api/me/entitlement")
 def me_entitlement():
-    return {"status": "active", "plan": "local", "trialEndsAt": None, "canUseAI": True,
+    return {"status": "active", "plan": "invite", "trialEndsAt": None, "canUseAI": True,
             "_failOpen": False}
 
 
 @app.get("/api/subscription/current")
 def subscription_current():
     # Fixture: an active plan so the front end's paywall gate stays open locally.
-    return {"plan": {"status": "active", "planId": "local", "name": "Local copy",
+    return {"plan": {"status": "active", "planId": "invite", "name": "Invite-only access",
                      "trialEndsAt": None, "features": {}}}
 
 
 @app.get("/api/subscription/plans")
 def subscription_plans():
     return {"plans": []}
-
-
-@app.api_route("/api/auth/{rest:path}", methods=["GET", "POST"])
-def auth_stub(rest: str):
-    return {"accessToken": "local-dev-token", "token": "local-dev-token", "user": USER}
 
 
 EMPTY = {  # shapes seen in the front end for list endpoints
@@ -707,6 +792,12 @@ def api_fallback(rest: str, request: Request):
 
 
 # --------------------------------------------------------------------------- static SPA
+@app.get("/login")
+@app.get("/signin")
+def signin_page():
+    return FileResponse(WEB / "signin.html")
+
+
 @app.get("/{path:path}")
 def spa(path: str):
     f = (WEB / path).resolve()

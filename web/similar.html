@@ -32,7 +32,13 @@
 <script>
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;" }[c]));
-async function api(p) { const r = await fetch(p); if (!r.ok) throw new Error((await r.json().catch(() => ({}))).detail || r.status); return r.json(); }
+function token() { try { return JSON.parse(localStorage.getItem("lawcentral_auth") || "{}").token || ""; } catch (e) { return ""; } }
+async function api(p) {
+  const r = await fetch(p, { headers: { Authorization: "Bearer " + token() } });
+  if (r.status === 401) { location.replace("/signin?redirect=" + encodeURIComponent("/similar.html")); throw new Error("Please sign in"); }
+  if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || r.status);
+  return r.json();
+}
 function row(d, extra) {
   return `<li><div class="t">${esc(d.title)}</div><div class="m">${esc(d.citation || d.matchedCitation || "")} · ${esc((d.publishdate || d.year || "").toString().slice(0,10))} ${d.score ? "· similarity " + d.score : ""}</div>${extra || ""}</li>`;
 }

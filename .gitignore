@@ -13,3 +13,10 @@ data/*.npz
 data/*.sqlite
 data/duck_tmp/
 data/*.log
+
+# Secrets
+.env
+data/.secret
+
+# local dev credentials written by me for browser testing
+data/dev-credentials.txt
