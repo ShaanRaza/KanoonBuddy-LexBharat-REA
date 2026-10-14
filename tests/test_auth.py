@@ -242,7 +242,7 @@ class AuthTests(unittest.TestCase):
         self.assertEqual(codes[0], 200)
         self.assertIn(429, codes)
 
-    # ------------------------------------------------------------------ Nyra isolation and limits
+    # ------------------------------------------------------------------ KanoonBuddy isolation and limits
     def _chat(self, tok, message, session=None):
         body = {"message": message}
         if session:

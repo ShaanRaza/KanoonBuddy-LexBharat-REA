@@ -1,4 +1,4 @@
-"""Nyra, the chat assistant, backed by a local Ollama model and grounded in the local corpus.
+"""KanoonBuddy, the chat assistant, backed by a local Ollama model and grounded in the local corpus.
 
 Flow for each message:
   1. retrieve   statute sections (explicit "IPC 302" / keywords) and Supreme Court cases (names,
@@ -39,7 +39,7 @@ NO_SOURCES = ("I couldn't find a matching section or case in the local library f
               "Try naming the provision directly (for example \"BNSS 482\" or \"section 138 NI Act\"), "
               "a case name (\"Maneka Gandhi\"), or a citation (\"AIR 1978 SC 597\").")
 
-SYSTEM = """You are Nyra, a legal research assistant for Indian law, running locally on the user's machine.
+SYSTEM = """You are KanoonBuddy, a legal research assistant for Indian law, running locally on the user's machine.
 
 Names: BNS = Bharatiya Nyaya Sanhita, 2023 (replaces the IPC); BNSS = Bharatiya Nagarik Suraksha Sanhita, 2023 (replaces the CrPC); BSA = Bharatiya Sakshya Adhiniyam, 2023 (replaces the Indian Evidence Act); IPC = Indian Penal Code, 1860; NIA = Negotiable Instruments Act, 1881.
 
@@ -456,7 +456,7 @@ def register(app, m):
                 yield ev("start", {"messageId": str(uuid.uuid4())})
                 got_slot = _slots.acquire(timeout=25)  # the local model runs a few answers at a time
                 if not got_slot:
-                    yield ev("error", {"code": "busy", "error": "Nyra is busy answering other questions. Please try again in a moment."})
+                    yield ev("error", {"code": "busy", "error": "KanoonBuddy is busy answering other questions. Please try again in a moment."})
                     return
                 yield ev("thinking", {"content": "Searching statutes and cases…"})
                 sections, cases, note = retrieve(m, msg)
@@ -528,7 +528,7 @@ def register(app, m):
                 # the real cause goes to the server log; the user sees a generic message
                 import logging
                 logging.getLogger("nyra").exception("chat failed: %s", type(e).__name__)
-                yield ev("error", {"code": "nyra_error", "error": "Nyra hit an error. Please try again."})
+                yield ev("error", {"code": "nyra_error", "error": "KanoonBuddy hit an error. Please try again."})
             finally:
                 if got_slot:
                     _slots.release()

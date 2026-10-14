@@ -2,7 +2,7 @@
 
 A private, local build of the LexBharat legal-research web app, running on the
 [Open India Law](https://huggingface.co/datasets/vaquill/open-india-law) corpus instead of the
-original hosted data, with a local-model assistant (Nyra).
+original hosted data, with a local-model assistant (KanoonBuddy).
 
 > **Status: private build. Authentication is in place; read [Before any deployment](#before-any-deployment) before putting it on the internet.**
 
@@ -15,7 +15,7 @@ original hosted data, with a local-model assistant (Nyra).
 | Citation graph | Derived from S.C.R. citations found in judgment text (the corpus's own citation fields are empty) |
 | AIR and SCC lookup | Mapped from parallel citations and name matching (~15.6k cites, ~40% of cases) |
 | More like this | Per-case vectors averaged from the stored Qdrant embeddings |
-| Nyra chat | Local Ollama model, grounded in retrieved statute sections and judgment passages, with citation checks |
+| KanoonBuddy chat | Local Ollama model, grounded in retrieved statute sections and judgment passages, with citation checks |
 
 Not built: free-text semantic search (the stored vectors are Voyage `voyage-4` embeddings, so queries need the
 Voyage API), cause lists, drafting, attachments, High Court judgments, payments, and sign-in by Google or phone.
@@ -57,7 +57,7 @@ Invite-only email and password. There is **no public sign-up**; an administrator
   Logout, password change and disabling an account revoke tokens.
 - Every `/api/*` route needs a token except login, refresh, logout, health, and read-only statute pages (rate limited by IP).
 - Lockout: 5 failed logins per email locks it for 15 minutes (the same for emails that do not exist); 10 attempts a minute per IP.
-- Nyra chats are private to the account that created them.
+- KanoonBuddy chats are private to the account that created them.
 - Limits: 12 chat messages a minute per user, 4,000 characters per message, 2 simultaneous model runs, 1 MB request bodies.
 - Headers: CSP, `X-Frame-Options`, `nosniff`, HSTS (production), `Cache-Control: no-store` on the API. API docs are disabled.
 - `LEXBHARAT_ENV` defaults to **production**, which **refuses to start** without `LEXBHARAT_SECRET` (32+ characters).
@@ -86,6 +86,7 @@ Tests: `LEXBHARAT_ENV=dev ./.venv/bin/python -m unittest tests.test_auth -v` (30
 - Internal storage keys and file names (for example `lawcentral_auth`, `LawCentralApp-*.js`) were left unchanged
   because renaming them inside minified bundles would break the app. External links to real accounts and
   names of unrelated organisations were not changed.
+- The chat assistant, formerly called Nyra, is now **KanoonBuddy** in all visible text, the model's own prompt and the docs, and its "she/her" in the app copy became "it/its". Internal names were kept because renaming them would break the app or your configuration: `server/nyra.py`, the `NYRA_MODEL`, `NYRA_DB` and `NYRA_MAX_CONCURRENT` environment variables, the `?nyra=1` URL parameter, API paths such as `/api/notifications/nyra-popout`, CSS classes, storage keys and image file names.
 - Product images and logos were not downloaded with the front end, so some images are missing.
 
 ## Before any deployment

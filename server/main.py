@@ -686,7 +686,7 @@ def more_like_this(case_id: str, limit: int = 10, same_court: bool = False):
     return {"caseId": case_id, "docs": docs}
 
 
-# --------------------------------------------------------------------------- Nyra (local model)
+# --------------------------------------------------------------------------- KanoonBuddy (local model)
 import sys  # noqa: E402
 from server import nyra  # noqa: E402
 
