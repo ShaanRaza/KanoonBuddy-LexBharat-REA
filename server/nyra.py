@@ -23,6 +23,7 @@ from pathlib import Path
 import httpx
 from fastapi import Request
 
+from server import templates as doc_templates
 from server import topic as topic_search
 from server import auth
 from fastapi.responses import JSONResponse, StreamingResponse
@@ -643,6 +644,14 @@ def register(app, m):
                 yield ev("thinking", {"content": "Searching statutes and cases…"})
                 if INJECT_RX.search(msg):
                     text = OFF_TASK
+                    yield ev("content", {"text": text})
+                    _save(uid, session_id, case_id, "user", msg, command, msg[:57] + "…" if len(msg) > 60 else msg)
+                    _save(uid, session_id, case_id, "assistant", text, command)
+                    yield ev("done", {"sessionId": session_id})
+                    return
+                tid = doc_templates.match_template(msg)
+                if tid:   # a standard document (affidavit, notice, agreement): use the vetted template, not model-written text
+                    text = doc_templates.chat_reply(tid)
                     yield ev("content", {"text": text})
                     _save(uid, session_id, case_id, "user", msg, command, msg[:57] + "…" if len(msg) > 60 else msg)
                     _save(uid, session_id, case_id, "assistant", text, command)

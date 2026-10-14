@@ -4,3 +4,4 @@ duckdb>=1.5
 numpy>=2.5
 httpx>=0.28
 qdrant-client>=1.19
+python-multipart>=0.0.20

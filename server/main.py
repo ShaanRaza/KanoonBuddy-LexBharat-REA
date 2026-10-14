@@ -3,6 +3,7 @@
 Run:  ./run.sh   (needs /Volumes/LAWSSD mounted; Qdrant optional for similarity)
 Everything outside the legal-data endpoints is stubbed so the saved front end loads.
 """
+import logging
 import os
 import re
 import threading
@@ -11,9 +12,13 @@ from pathlib import Path
 
 import duckdb
 from fastapi import Depends, FastAPI, HTTPException, Request
+from fastapi import File, Form, UploadFile
+from starlette.concurrency import run_in_threadpool
 from fastapi.responses import RedirectResponse, FileResponse, JSONResponse
 
 from server import topic
+from server import docparse
+from server import templates as doc_templates
 from server import auth  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -992,6 +997,43 @@ def subscription_current():
 @app.get("/api/subscription/plans")
 def subscription_plans():
     return {"plans": []}
+
+
+@app.get("/api/templates")
+def templates_list():
+    return {"templates": doc_templates.public_list()}
+
+
+@app.post("/api/templates/{template_id}/render")
+async def templates_render(template_id: str, request: Request):
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+    vals = body.get("values") if isinstance(body, dict) and isinstance(body.get("values"), dict) else {}
+    vals = {str(k)[:40]: str(v)[:4000] for k, v in list(vals.items())[:40]}
+    try:
+        return doc_templates.render(template_id, vals)
+    except KeyError:
+        raise HTTPException(404, "Unknown template")
+
+
+@app.post("/api/documents/parse")
+async def documents_parse(request: Request, file: UploadFile = File(...), forceOcr: str = Form(""), ocrLanguage: str = Form("eng"),
+                          legalFormat: str = Form("")):
+    """Import dialog in the editor: read an uploaded PDF / Word / text / RTF / image and return its text."""
+    try:
+        auth.limiter.hit(f"parse:{request.state.user['id']}", 8, 60)
+    except auth.AuthError:
+        return JSONResponse({"error": "Too many imports at once. Wait a minute and try again."}, status_code=429)
+    data = await file.read(docparse.MAX_BYTES + 1)
+    try:
+        return await run_in_threadpool(docparse.parse, file.filename or "upload", data, forceOcr == "true", ocrLanguage, legalFormat == "true")
+    except docparse.ParseError as e:
+        return JSONResponse({"error": str(e)}, status_code=422)
+    except Exception:
+        logging.getLogger("lexbharat").exception("document parse failed")
+        return JSONResponse({"error": "This file could not be read."}, status_code=422)
 
 
 EMPTY = {  # shapes seen in the front end for list endpoints

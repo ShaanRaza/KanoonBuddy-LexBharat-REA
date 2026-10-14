@@ -620,5 +620,59 @@
     "basic structure"
    ]
   ]
+ },
+ {
+  "id": "D01",
+  "cat": "template",
+  "q": "Draft a home affidavit",
+  "all": [
+   [
+    "solemnly affirm"
+   ],
+   [
+    "verified at",
+    "verification"
+   ]
+  ],
+  "none": [
+   "BNSS",
+   "State of [STATE]",
+   "County",
+   "sayeth"
+  ]
+ },
+ {
+  "id": "D02",
+  "cat": "template",
+  "q": "Write a legal notice for a bounced cheque",
+  "all": [
+   [
+    "138"
+   ],
+   [
+    "fifteen",
+    "15"
+   ]
+  ],
+  "none": [
+   "BNSS"
+  ]
+ },
+ {
+  "id": "D03",
+  "cat": "template",
+  "q": "Prepare a rent agreement",
+  "all": [
+   [
+    "eleven",
+    "11"
+   ],
+   [
+    "landlord"
+   ],
+   [
+    "tenant"
+   ]
+  ]
  }
 ]

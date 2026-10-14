@@ -308,8 +308,9 @@
 </style>
 <style id="lb-editor-help-css">
 .lb-ed-btn { font-weight: 700 !important; color: #111 !important; }
-#lb-editor-help { position: fixed; right: 16px; bottom: 16px; z-index: 60; width: min(360px, calc(100vw - 32px)); background: #fff; color: #1c1917;
+#lb-editor-help { position: fixed; left: 12px; bottom: 76px; z-index: 60; width: 300px; max-width: calc(100vw - 24px); background: #fff; color: #1c1917;
   border: 1px solid #e7e5e4; border-radius: 14px; padding: 14px 16px; box-shadow: 0 8px 28px rgba(0,0,0,.18); font: 14px/1.45 system-ui, sans-serif; }
+@media (max-width: 900px) { #lb-editor-help { left: 12px; right: 12px; width: auto; bottom: 96px; } }
 #lb-editor-help h3 { margin: 0 0 8px; font-size: 14px; display: flex; justify-content: space-between; align-items: center; }
 #lb-editor-help button.x { background: none; border: 0; font-size: 18px; line-height: 1; cursor: pointer; color: #6b6761; }
 #lb-editor-help dl { margin: 0; } #lb-editor-help dt { font-weight: 700; margin-top: 8px; } #lb-editor-help dd { margin: 0; color: #57534e; }
@@ -320,7 +321,7 @@
 (function () {
   var TIPS = {
     "Save": "Saves this document to your account so you can open it again later.",
-    "Import": "Bring in a PDF, Word file or image. Not available yet in this version.",
+    "Import": "Bring in a PDF, Word (.docx), text or RTF file, or a scanned image. Text is read with OCR when needed.",
     "Export": "Download this document as Word or PDF. Not available yet in this version.",
     "Ask KanoonBuddy": "Open the assistant to ask legal questions while you write. Answers cite their sources.",
     "Standard": "The document style. Leave it on Standard."
@@ -332,7 +333,8 @@
     d.innerHTML = '<h3>What these buttons do <button class="x" aria-label="Close help" type="button">&times;</button></h3><dl>' +
       '<dt>Save</dt><dd>Saves this document to your account.</dd>' +
       '<dt>Ask KanoonBuddy</dt><dd>Opens the assistant to ask legal questions as you write.</dd>' +
-      '<dt>Import <span class="soon">Not available yet</span></dt><dd>Will bring in a PDF, Word file or image.</dd>' +
+      '<dt>Insert into document</dt><dd>Under each KanoonBuddy reply: puts that reply into your document at the cursor. AI drafts can be wrong, so read and edit before use.</dd>' +
+      '<dt>Import</dt><dd>Brings in a PDF, Word (.docx), text or RTF file, or a scanned image, and puts its text in the document.</dd>' +
       '<dt>Export <span class="soon">Not available yet</span></dt><dd>Will download your document as Word or PDF.</dd></dl>';
     d.querySelector(".x").onclick = function () { try { localStorage.setItem(KEY, "1"); } catch (e) {} d.remove(); };
     return d;
@@ -345,12 +347,58 @@
       var t = (b.textContent || "").trim();
       if (TIPS[t] && b.getBoundingClientRect().top < 120) { b.classList.add("lb-ed-btn"); b.title = TIPS[t]; }
     });
-    if (!c && !closed() && document.querySelector("button.lb-ed-btn")) document.body.appendChild(card());
+    var seen = false; try { seen = sessionStorage.getItem("lb_editor_help_seen") === "1"; } catch (e) {}
+    if (/Something went wrong/.test(document.body.innerText || "") && c) { c.remove(); return; }
+    if (!c && !seen && !closed() && document.querySelector("button.lb-ed-btn")) {
+      document.body.appendChild(card());
+      try { sessionStorage.setItem("lb_editor_help_seen", "1"); } catch (e) {}
+    }
   }
   new MutationObserver(sweep).observe(document.documentElement, { childList: true, subtree: true });
   sweep();
 })();
 </script>
+<style id="lb-insert-css">
+.lb-msg-actions { display: flex; gap: 8px; margin: 6px 0 2px 2px; }
+.lb-msg-actions button { font: 600 12px system-ui, sans-serif; border-radius: 8px; padding: 5px 10px; cursor: pointer; border: 1px solid #e7e5e4; background: #fff; color: #1c1917; }
+.lb-msg-actions button.primary { background: #c2571a; border-color: #c2571a; color: #fff; }
+.lb-msg-actions button:hover { filter: brightness(.95); }
+</style>
+<script id="lb-insert-js">
+/* LexBharat: the editor assistant only replies in the chat. Under each reply, add "Insert into document" and "Copy". */
+(function () {
+  function flash(btn, text, ms) { var t = btn.dataset.label || btn.textContent; btn.dataset.label = t; btn.textContent = text; setTimeout(function () { btn.textContent = t; }, ms || 1800); }
+  function insert(bubble, btn) {
+    var ed = document.querySelector(".ProseMirror");
+    if (!ed) { flash(btn, "Open a document first"); return; }
+    ed.focus();
+    var ok = document.execCommand("insertHTML", false, bubble.innerHTML);
+    flash(btn, ok ? "Inserted \u2713" : "Could not insert");
+  }
+  function copy(bubble, btn) {
+    var text = bubble.innerText || bubble.textContent;
+    var done = function () { flash(btn, "Copied \u2713"); };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, function () { flash(btn, "Copy blocked"); });
+    else { var t = document.createElement("textarea"); t.value = text; document.body.appendChild(t); t.select(); document.execCommand("copy"); t.remove(); done(); }
+  }
+  function sweep() {
+    if (location.pathname.indexOf("/editor") !== 0) return;
+    document.querySelectorAll(".justify-start div.prose").forEach(function (bubble) {
+      var holder = bubble.closest(".justify-start > div");
+      if (!holder || holder.querySelector(".lb-msg-actions")) return;
+      var txt = (bubble.textContent || "").trim();
+      if (txt.length < 20 || /^.{0,4}Hello! I'm your AI legal assistant/.test(txt)) return;
+      var bar = document.createElement("div"); bar.className = "lb-msg-actions";
+      var a = document.createElement("button"); a.type = "button"; a.className = "primary"; a.textContent = "Insert into document";
+      a.title = "Put this reply into your document at the cursor"; a.onclick = function () { insert(bubble, a); };
+      var c = document.createElement("button"); c.type = "button"; c.textContent = "Copy"; c.onclick = function () { copy(bubble, c); };
+      bar.appendChild(a); bar.appendChild(c); holder.appendChild(bar);
+    });
+  }
+  new MutationObserver(function () { clearTimeout(sweep.t); sweep.t = setTimeout(sweep, 250); }).observe(document.documentElement, { childList: true, subtree: true, characterData: true });
+})();
+</script>
+<script src="/templates-ui.js?v=1" defer></script>
 <script id="lb-hide-buttons">
 /* LexBharat: hide composer chips for drafting and slash-commands, which have no backend in this build */
 (function () {

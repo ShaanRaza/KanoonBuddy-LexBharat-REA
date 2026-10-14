@@ -119,3 +119,11 @@ Legal text comes from **Open India Law** by Vaquill AI, licensed
 [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Judgments originate from official court sources, and
 the High Court and Supreme Court judgment PDFs are on the AWS Open Data Registry. Cite the dataset if you publish
 anything derived from it.
+
+## Document import (editor)
+
+The editor Import dialog reads PDF, Word (.docx), text, RTF and images (server/docparse.py). PDFs and OCR need system programs:
+
+    brew install poppler tesseract tesseract-lang
+
+Legacy .doc files are not supported. Export (download as Word or PDF) is not built yet.
