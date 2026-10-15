@@ -471,10 +471,20 @@ def tools_code_converter(pair: str = "ipc-bns"):
         eq = equivalent_section(old, d["title"])
         if eq:
             results.append({"oldSection": num, "newSection": eq[1], "description": d["title"]})
+    # Pairs whose headings differ (e.g. IPC 420 -> BNS 318) come from the verified correspondence table in nyra.py.
+    from server import nyra as _n
+    have = {r["oldSection"] for r in results}
+    for (oc, on), (nc, nn) in _n.CONCORDANCE.items():
+        if oc == old and nc == new and on not in have and (nc, nn) in CLEAN:
+            results.append({"oldSection": on, "newSection": nn, "description": (CLEAN.get((oc, on)) or CLEAN[(nc, nn)])["title"]})
+    if pair == "crpc-bnss":    # the CrPC text is not in the library, so the old side comes only from the correspondence table
+        for on, nn in _n.CRPC_TO_BNSS.items():
+            if ("BNSS", nn) in CLEAN:
+                results.append({"oldSection": on, "newSection": nn, "description": CLEAN[("BNSS", nn)]["title"]})
     results.sort(key=lambda r: section_key(r["oldSection"]))
     return {"pair": {"id": pair, "from": old, "to": new, "fromFull": old_full, "toFull": new_full},
             "results": results,
-            "basis": "sections with the same heading on both sides; check the official text"}
+            "basis": "same heading on both sides, plus a short table of well-known pairs whose headings differ; check the official text"}
 
 
 _TRANSLATE_LANGS = {"en": "English", "hi": "Hindi", "mr": "Marathi", "ta": "Tamil", "te": "Telugu",
@@ -1316,10 +1326,10 @@ for _p in ("billing", "account/marketplace", "account/referrals", "leads", "supp
 app.add_api_route("/workspace/{rest:path}", lambda rest: _to_dashboard(), methods=["GET"], include_in_schema=False)
 
 # Public tool pages from the original site: their generators call servers this build does not have.
-for _p in ("tools", "affidavit", "rent-agreement", "cheque-bounce", "consumer-complaint", "cause-list", "causelist", "formats"):
+# (/tools is the in-app AI Tools page for signed-in users; signed-out visitors are sent home by a script in index.html.)
+for _p in ("affidavit", "rent-agreement", "cheque-bounce", "consumer-complaint", "cause-list", "causelist", "formats"):
     app.add_api_route(f"/{_p}", _to_home, methods=["GET"], include_in_schema=False)
-for _p in ("tools", "formats"):
-    app.add_api_route(f"/{_p}/{{rest:path}}", (lambda rest: _to_home()), methods=["GET"], include_in_schema=False)
+app.add_api_route("/formats/{rest:path}", (lambda rest: _to_home()), methods=["GET"], include_in_schema=False)
 
 
 @app.get("/{path:path}")

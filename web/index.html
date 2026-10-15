@@ -1,4 +1,6 @@
 <!DOCTYPE html><html lang="en" style="color-scheme: light only; --keyboard-height: 0px;"><head>
+<script>try{if(/^\/tools(\/|$)/.test(location.pathname)){var a=JSON.parse(localStorage.getItem("lawcentral_auth")||"null");if(!a||!a.token)location.replace("/");}}catch(e){}</script>
+
   <!-- Analytics: Google tag (GA4 + Google Ads from one script), Meta Pixel and
        Contentsquare (Hotjar). Loaded on every page EXCEPT the banking customer app
        (/banking, /banking/*) — owner decision 2026-10-04, bank users are not
@@ -421,6 +423,16 @@
         }
       }
     });
+    if (location.pathname.indexOf("/tools") === 0) {   // machine translation by a small local model is unreliable for legal text
+      var tb = [].slice.call(document.querySelectorAll("textarea")).filter(function (x) { return x.getBoundingClientRect().width > 0; })[0];
+      var wb = document.getElementById("lb-translate-warn");
+      if (tb && !wb) {
+        wb = document.createElement("div"); wb.id = "lb-translate-warn"; wb.setAttribute("role", "note");
+        wb.style.cssText = "background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:10px 14px;margin:0 0 12px;font:13.5px/1.5 system-ui,sans-serif;color:#1c1917";
+        wb.innerHTML = "<b>Experimental.</b> This translation comes from a small AI model on our server. It makes serious mistakes, especially in Hindi and other Indian languages, and can misread legal terms. Do not use it for court filings or legal documents. Have a qualified translator check anything important.";
+        tb.parentNode.insertBefore(wb, tb);
+      } else if (!tb && wb) wb.remove();
+    }
     if (location.pathname.indexOf("/editor") === 0) {   // the original editor's review tools need services this build does not have; "Check" replaces them
       document.querySelectorAll("button").forEach(function (b) {
         var t = (b.textContent || "").trim(), lab = (b.getAttribute("aria-label") || b.title || "");
