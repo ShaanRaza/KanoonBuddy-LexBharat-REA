@@ -51,6 +51,15 @@ class EditorTests(unittest.TestCase):
         self.assertEqual(self.c.delete(f"/api/editor/documents/{d['id']}", headers=h).status_code, 200)
         self.assertEqual(self.c.get(f"/api/editor/documents/{d['id']}", headers=h).status_code, 404)
 
+    def test_title_from_the_document_shape_the_real_editor_saves(self):
+        """The editor saves {schemaVersion, ..., content: {type: doc, content: [...]}} with a heading first."""
+        h = self.tok("a@example.com")
+        real = json.dumps({"schemaVersion": 1, "createdAt": "x", "updatedAt": "x", "content": {"type": "doc", "attrs": {"id": "d"}, "content": [
+            {"type": "heading", "attrs": {"level": 2}, "content": [{"type": "text", "text": "LEGAL NOTICE UNDER SECTION 138"}]},
+            {"type": "paragraph", "content": [{"type": "text", "text": "Body"}]}]}})
+        d = self.c.post("/api/editor/documents", json={"content": real}, headers=h).json()
+        self.assertEqual(d["title"], "LEGAL NOTICE UNDER SECTION 138")
+
     def test_documents_are_private(self):
         a, b = self.tok("a@example.com"), self.tok("b@example.com")
         d = self.c.post("/api/editor/documents", json={"content": doc("A's private notes")}, headers=a).json()

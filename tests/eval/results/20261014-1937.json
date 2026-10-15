@@ -1,0 +1,194 @@
+[
+ {
+  "id": "A01",
+  "cat": "practice",
+  "q": "My client's cheque was dishonoured. What is the procedure and time limits for a complaint under section 138?",
+  "pass": false,
+  "checks": {
+   "retrieval": true,
+   "facts": false,
+   "citations": true,
+   "no_error": true
+  },
+  "answer": "Under Section 138 of the Negotiable Instruments Act, 1881, the complaint for dishonour of a cheque must be made within one month from the date on which the cause of action arises. Specifically, the payee or the holder in due course of the cheque must make a written complaint within this period. If the complaint is not made within the prescribed time, the court may still take cognizance if the complainant can show sufficient cause for the delay.\n\n[142(1)(b)]",
+  "retrieved": [
+   "NIA § 138",
+   "NIA § 142",
+   "NIA § 139"
+  ],
+  "t_retrieve": 0.0,
+  "t_answer": 6.8
+ },
+ {
+  "id": "A02",
+  "cat": "practice",
+  "q": "Which section of BNSS deals with bail for offences punishable with death or life imprisonment?",
+  "pass": true,
+  "checks": {
+   "retrieval": true,
+   "facts": true,
+   "citations": true,
+   "no_error": true
+  },
+  "answer": "Section 480 of the Bharatiya Nagarik Suraksha Sanhita, 2023 deals with when bail may be taken in case of non-bailable offences, including those punishable with death or life imprisonment. [BNSS § 480]",
+  "retrieved": [
+   "BNSS § 480",
+   "BNSS § 483"
+  ],
+  "t_retrieve": 0.0,
+  "t_answer": 6.3
+ },
+ {
+  "id": "A03",
+  "cat": "practice",
+  "q": "Can a Magistrate take cognizance of an offence on a police report?",
+  "pass": true,
+  "checks": {
+   "retrieval": true,
+   "facts": true,
+   "citations": true,
+   "no_error": true
+  },
+  "answer": "Yes, a Magistrate can take cognizance of an offence on a police report. According to [BNSS § 210], any Magistrate of the first class, and any Magistrate of the second class specially empowered under sub-section (2), may take cognizance of any offence upon a police report submitted in any mode, including electronic mode.",
+  "retrieved": [
+   "BNSS § 210",
+   "BNSS § 193",
+   "BNSS § 230"
+  ],
+  "t_retrieve": 0.0,
+  "t_answer": 7.9
+ },
+ {
+  "id": "A04",
+  "cat": "practice",
+  "q": "What is the difference between culpable homicide and murder?",
+  "pass": false,
+  "checks": {
+   "retrieval": false,
+   "citations": true,
+   "no_error": true
+  },
+  "answer": "Culpable homicide and murder are both serious offenses under the Bharatiya Nyaya Sanhita, 2023 (BNS). Culpable homicide, as defined in [BNS § 101], includes situations where death is caused due to an act done with the intention of causing death, or with knowledge that it is likely to cause death, but without the specific intent to kill. Murder, as per [BNS § 101], is a more severe form of culpable homicide, specifically when the act is done with the intention of causing death, or with knowledge that it is likely to cause death, and the death results from such an act.\n\nThe key difference lies in the intention and knowledge of the offender. Culpable homicide can occur even without the intention to kill, as long as the act is done with knowledge that it is likely to cause death, whereas murder requires the intention to cause death or the knowledge that the act is likely to cause death.\n\nNote: IPC § 304 is repealed and no longer in force; the corresponding provision is BNS § 105.",
+  "retrieved": [
+   "BNS § 105",
+   "BNS § 101",
+   "BNS § 110",
+   "IPC § 304",
+   "IPC § 300"
+  ],
+  "t_retrieve": 0.9,
+  "t_answer": 15.7
+ },
+ {
+  "id": "A05",
+  "cat": "practice",
+  "q": "What replaced section 377 IPC?",
+  "pass": false,
+  "checks": {
+   "facts": true,
+   "no_bad_phrases": true,
+   "citations": false,
+   "no_error": true
+  },
+  "answer": "Section 377 of the Indian Penal Code, 1860, was repealed and replaced by the Bharatiya Nyaya Sanhita, 2023 (BNS), but the BNS does not have a corresponding section. [BNS § 103]\n\n⚠️ Not verified: BNS § 103 was not in the sources I retrieved. Check it before relying on it.",
+  "retrieved": [
+   "IPC § 377"
+  ],
+  "t_retrieve": 0.0,
+  "t_answer": 4.0
+ },
+ {
+  "id": "A06",
+  "cat": "practice",
+  "q": "What are the essential ingredients of cheating?",
+  "pass": true,
+  "checks": {
+   "retrieval": true,
+   "no_bad_phrases": true,
+   "citations": true,
+   "no_error": true
+  },
+  "answer": "The essential ingredients of cheating under [BNS § 318] are as follows:\n1. Deceiving a person by fraud or dishonesty.\n2. Inducing the deceived person to deliver property to another person, consent to the retention of property, or perform an act or omit an act.\n3. The act or omission must cause or be likely to cause damage or harm to the deceived person in body, mind, reputation, or property.\n\nThese elements must be present for an act to be considered cheating.",
+  "retrieved": [
+   "BNS § 318",
+   "BNS § 319",
+   "BNSS § 238",
+   "BNSS § 531",
+   "BNSS § 359"
+  ],
+  "t_retrieve": 0.0,
+  "t_answer": 11.6
+ },
+ {
+  "id": "A07",
+  "cat": "practice",
+  "q": "Is section 124A IPC still law?",
+  "pass": true,
+  "checks": {
+   "retrieval": true,
+   "facts": true,
+   "citations": true,
+   "no_error": true
+  },
+  "answer": "No, section 124A of the Indian Penal Code, 1860 (repealed) is no longer law. It was replaced by section 152 of the Bharatiya Nyaya Sanhita, 2023, which addresses acts endangering the sovereignty, unity, and integrity of India. [BNS § 152]",
+  "retrieved": [
+   "IPC § 124A",
+   "BNS § 152"
+  ],
+  "t_retrieve": 0.0,
+  "t_answer": 6.8
+ },
+ {
+  "id": "A08",
+  "cat": "practice",
+  "q": "What are the grounds on which police can arrest without warrant under BNSS?",
+  "pass": true,
+  "checks": {
+   "retrieval": true,
+   "citations": true,
+   "no_error": true
+  },
+  "answer": "Under BNSS § 35, a police officer may arrest without a warrant if any of the following conditions are met:\n\n- The person commits a cognizable offence in the presence of a police officer.\n- A reasonable complaint has been made, or credible information has been received, or a reasonable suspicion exists that the person has committed a cognizable offence punishable with imprisonment for a term which may be less than seven years, provided the arrest is necessary to prevent further offences, for proper investigation, to prevent evidence tampering, to prevent inducement or threats, or to ensure the person's presence in court.\n- The person is credible information has been received that they have committed a cognizable offence punishable with imprisonment for a term which may extend to more than seven years or with death sentence, and the police officer has reason to believe they have committed the said offence.\n- The person has been proclaimed as an offender.\n- The person is in possession of stolen property.\n- The person obstructs a police officer while in the execution of their duty, has escaped, or attempts to escape from lawful custody.\n- The person is reasonably suspected of being a deserter from any of the Armed Forces of the Union.\n- The person is reasonably suspected of having been concerned in any act committed outside India that would be a cognizable offence if committed in India.\n\n[Cited from BNSS § 35]",
+  "retrieved": [
+   "BNSS § 35"
+  ],
+  "t_retrieve": 0.0,
+  "t_answer": 21.1
+ },
+ {
+  "id": "A09",
+  "cat": "practice",
+  "q": "mere dost ne udhaar paise nahi lautaye, kya karu?",
+  "pass": true,
+  "checks": {
+   "facts": true,
+   "citations": true,
+   "no_error": true
+  },
+  "answer": "KanoonBuddy answers in English only for now, and it handles Hindi and mixed Hindi-English questions badly, so I'd rather not guess. Please ask again in English (for example, \"My friend has not returned money I lent him. What can I do?\"). अर्थात्: कृपया अंग्रेज़ी में पूछें।",
+  "retrieved": [
+   "BNS § 130",
+   "BNS § 61",
+   "NIA § 50",
+   "BNSS § 417",
+   "BNS § 171"
+  ],
+  "t_retrieve": 2.9,
+  "t_answer": 0.0
+ },
+ {
+  "id": "A10",
+  "cat": "practice",
+  "q": "hi",
+  "pass": true,
+  "checks": {
+   "facts": true,
+   "citations": true,
+   "no_error": true
+  },
+  "answer": "Hello! I'm KanoonBuddy, a legal research assistant for Indian law. I can look up sections of the BNS, BNSS, BSA, the older IPC and Indian Evidence Act, and the Negotiable Instruments Act; find Supreme Court and High Court judgments by name, citation or topic; and draft standard affidavits, notices and agreements. Try: \"What is the punishment for cheating?\", \"Explain section 138 NI Act\" or \"Draft a rent agreement\". I can make mistakes, so please check anything important against the official text.",
+  "retrieved": [],
+  "t_retrieve": 0.0,
+  "t_answer": 0.0
+ }
+]

@@ -1,0 +1,78 @@
+[
+ {
+  "id": "K01",
+  "cat": "landmark",
+  "q": "What did the Supreme Court hold in Kesavananda Bharati?",
+  "pass": true,
+  "checks": {
+   "retrieval": true,
+   "facts": true,
+   "no_bad_phrases": true,
+   "citations": true,
+   "no_error": true
+  },
+  "answer": "The Supreme Court in Kesavananda Bharati held that Parliament's power to amend the Constitution under Article 368 is wide and reaches the Fundamental Rights, but it cannot be used to destroy or alter the 'basic structure' (basic features) of the Constitution. The Court overruled the view in Golak Nath (1967) that Fundamental Rights could not be amended. [Kesavananda Bharati Sripadagalavaru v. State of Kerala, [1973] SUPP. 1 S.C.R. 1, 225, 3, 291, 790, 977]\n\n**Sources:** [His Holiness Kesavananda Bharati Sripadagalavaru Versus State Of Keral (1973)](/case/1973_INSC_91)",
+  "retrieved": [
+   "1973_INSC_91"
+  ],
+  "t_retrieve": 1.5,
+  "t_answer": 9.3
+ },
+ {
+  "id": "K02",
+  "cat": "landmark",
+  "q": "What was decided in Minerva Mills v. Union of India?",
+  "pass": true,
+  "checks": {
+   "retrieval": true,
+   "facts": true,
+   "citations": true,
+   "no_error": true
+  },
+  "answer": "In Minerva Mills Ltd. & ORS. v. UNION OF INDIA & ORS., the Supreme Court of India held that:\n\n1. Clause (4) of Article 368 of the Constitution is unconstitutional and void as it damages the basic structure of the Constitution.\n2. The balance between Fundamental Rights and Directive Principles is part of the basic structure.\n3. The preamble to the Constitution contains the clue to the fundamentals of the Constitution, and the power to amend the Constitution must be construed to preserve the basic features of the Constitution.\n\nThe Court struck down Section 55 of the 42nd Amendment, which included clauses 4 and 5 added to Article 368, and Section 4 of the same amendment. [1981] 1 S.C.R. 206, [1980] SC 1789, [1980] 3 SCC 625. [Minerva Mills Ltd. v. Union of India (1980)]\n\n**Sources:** [Minerva Mills Ltd. & Ors Versus Union Of India & Ors. (1981)](/case/1980_INSC_142)",
+  "retrieved": [
+   "1980_INSC_142",
+   "1986_INSC_185"
+  ],
+  "t_retrieve": 3.5,
+  "t_answer": 13.7
+ },
+ {
+  "id": "K03",
+  "cat": "landmark",
+  "q": "What did Arnesh Kumar v. State of Bihar decide?",
+  "pass": true,
+  "checks": {
+   "retrieval": true,
+   "facts": true,
+   "citations": true,
+   "no_error": true
+  },
+  "answer": "The Supreme Court in Arnesh Kumar v. State of Bihar decided that for offences punishable with imprisonment of up to seven years, such as under Section 498A of the Indian Penal Code (now replaced by a provision in BNS), the police should not arrest automatically. Instead, they must satisfy themselves that an arrest is necessary under Section 35 of the CrPC (now Section 35 of BNSS) and record their reasons. Magistrates must also check that this was done before authorising detention. The Court directed State Governments to instruct their police officers to not automatically arrest in such cases but to satisfy themselves about the necessity of arrest. [ARNESH KUMAR versus STATE OF BIHAR & ANR., [2014] 8 S.C.R. 128, p. 13-15]\n\n**Sources:** [Arnesh Kumar Versus State Of Bihar & Anr. (2014)](/case/2014_INSC_463)",
+  "retrieved": [
+   "2014_INSC_463",
+   "BRHC010039392020"
+  ],
+  "t_retrieve": 4.5,
+  "t_answer": 13.4
+ },
+ {
+  "id": "K04",
+  "cat": "landmark",
+  "q": "What did Puttaswamy decide about privacy?",
+  "pass": true,
+  "checks": {
+   "retrieval": true,
+   "facts": true,
+   "citations": true,
+   "no_error": true
+  },
+  "answer": "The Supreme Court of India, in the case of Justice K.S. Puttaswamy (Retd.) versus Union of India and ORS. [2017] 10 S.C.R. 569, held that the right to privacy is a fundamental right protected under Article 21 as part of the right to life and personal liberty, and by the freedoms in Part III of the Constitution. This decision overruled earlier cases like M.P. Sharma and Kharak Singh to the extent they held otherwise. [EDITORIAL SUMMARY of Justice K.S. Puttaswamy (Retd.) v. Union of India (2017), nine-judge bench]\n\n**Sources:** [Justice K S Puttaswamy (Retd.), And Anr. Versus Union Of India And Ors (2017)](/case/2017_INSC_801)",
+  "retrieved": [
+   "2017_INSC_801",
+   "2018_INSC_880"
+  ],
+  "t_retrieve": 3.7,
+  "t_answer": 13.3
+ }
+]

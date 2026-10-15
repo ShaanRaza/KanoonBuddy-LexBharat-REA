@@ -46,7 +46,10 @@ def _first_text(node) -> str:
     if isinstance(node, dict):
         if isinstance(node.get("text"), str) and node["text"].strip():
             return node["text"].strip()
-        for child in node.get("content") or []:
+        kids = node.get("content") or []
+        if isinstance(kids, dict):      # the saved file wraps the document: {"content": {"type": "doc", ...}}
+            kids = [kids]
+        for child in kids:
             t = _first_text(child)
             if t:
                 return t
@@ -66,8 +69,13 @@ def register(app):
     def list_docs(request: Request):
         c = _conn()
         try:
-            rows = c.execute("SELECT id,title,saved_at FROM docs WHERE user_id=? ORDER BY saved_at DESC LIMIT 500",
-                             (request.state.user["id"],)).fetchall()
+            uid = request.state.user["id"]
+            for r in c.execute("SELECT id,content FROM docs WHERE user_id=? AND title='Untitled document'", (uid,)).fetchall():
+                t = derive_title(r["content"])           # repair titles saved before the title finder handled wrapped documents
+                if t != "Untitled document":
+                    c.execute("UPDATE docs SET title=? WHERE id=? AND user_id=?", (t, r["id"], uid))
+            c.commit()
+            rows = c.execute("SELECT id,title,saved_at FROM docs WHERE user_id=? ORDER BY saved_at DESC LIMIT 500", (uid,)).fetchall()
         finally:
             c.close()
         return {"documents": [{"id": r["id"], "title": r["title"], "savedAt": r["saved_at"]} for r in rows]}

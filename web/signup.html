@@ -35,7 +35,12 @@
   $("signin").href = "/signin" + L.suffix;
 
   fetch("/api/auth/config").then(function (r) { return r.json(); }).then(function (c) {
-    if (!c.signupEnabled) { L.show("Sign-up isn't open yet. Please check back soon."); $("go").disabled = true; }
+    if (!c.signupEnabled) {
+      L.show("Sign-up isn't open yet. Please check back soon, or ask the team for an invitation.");
+      $("go").disabled = true;
+      Array.prototype.forEach.call(document.querySelectorAll("#f input"), function (i) { i.disabled = true; });
+      Array.prototype.forEach.call(document.querySelectorAll("#f label, #f .hint, #f .check"), function (e) { e.style.opacity = ".45"; });
+    }
     if (c.captchaSiteKey) {          // optional Cloudflare Turnstile, only when the operator configured it
       var s = document.createElement("script"); s.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?onload=lbCaptcha"; s.async = true; document.head.appendChild(s);
       window.lbCaptcha = function () { window.turnstile.render("#captcha", { sitekey: c.captchaSiteKey, callback: function (t) { captchaToken = t; } }); };

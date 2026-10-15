@@ -20,3 +20,4 @@ data/.secret
 
 # local dev credentials written by me for browser testing
 data/dev-credentials.txt
+data/feedback.jsonl

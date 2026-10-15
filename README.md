@@ -127,3 +127,11 @@ The editor Import dialog reads PDF, Word (.docx), text, RTF and images (server/d
     brew install poppler tesseract tesseract-lang
 
 Legacy .doc files are not supported. Export (download as Word or PDF) is not built yet.
+
+## Editor extras (added 2026-10-14)
+
+- **Templates**: ten standard Indian documents with fill-in forms (`server/templates.py`, `web/templates-ui.js`). Draft requests in chat use them instead of model-written text.
+- **Check**: deterministic document check (blanks, missing verification clause, every cited section and case checked against the library, repealed law flagged). It replaces the original editor's "Risk Review / Fix Citations / Fields / Health", which needed services this build does not have and are hidden.
+- **Landmark summaries**: `server/landmarks.py` holds short editorial summaries of 12 landmark cases and reading notes for dense sections (BNSS 187). They are labelled as editorial, not part of the judgment. A lawyer should review them.
+- **Case page** `/case/<id>`: full judgment text (Supreme Court and High Courts), find-in-text, key-holding box for landmarks. Chat answers end with a Sources line linking to the cited sections and cases.
+- **Editor guide** `/editor-guide` is our own page. The original site's guide described features that do not exist here.

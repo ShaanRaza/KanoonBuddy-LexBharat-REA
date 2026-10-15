@@ -1,0 +1,381 @@
+[
+ {
+  "id": "S01",
+  "cat": "statute",
+  "q": "What is the punishment for murder under BNS section 103?",
+  "pass": true,
+  "checks": {
+   "retrieval": true,
+   "facts": true,
+   "citations": true,
+   "no_error": true
+  },
+  "answer": "Under BNS § 103, the punishment for murder is death or imprisonment for life, and the offender is also liable to fine. [BNS § 103]\n\nNote: IPC § 302 is repealed and no longer in force; the corresponding provision is BNS § 103.",
+  "retrieved": [
+   "BNS § 103",
+   "IPC § 302"
+  ],
+  "t_retrieve": 0.0,
+  "t_answer": 2.3
+ },
+ {
+  "id": "S02",
+  "cat": "statute",
+  "q": "What is the punishment for culpable homicide not amounting to murder under section 105 of the BNS?",
+  "pass": true,
+  "checks": {
+   "retrieval": true,
+   "facts": true,
+   "citations": true,
+   "no_error": true
+  },
+  "answer": "Under section 105 of the Bharatiya Nyaya Sanhita, 2023 (BNS), the punishment for culpable homicide not amounting to murder is imprisonment for life, or imprisonment of either description for a term which shall not be less than five years but which may extend to ten years, and shall also be liable to fine, if the act by which the death is caused is done with the intention of causing death, or of causing such bodily injury as is likely to cause death. If the act is done with the knowledge that it is likely to cause death, but without any intention to cause death, or to cause such bodily injury as is likely to cause death, the punishment is imprisonment of either description for a term which may extend to ten years and with fine.\n\n[Cited from: [BNS § 105]]\n\nNote: IPC § 304 is repealed and no longer in force; the corresponding provision is BNS § 105.",
+  "retrieved": [
+   "BNS § 105",
+   "IPC § 304"
+  ],
+  "t_retrieve": 0.0,
+  "t_answer": 8.1
+ },
+ {
+  "id": "S03",
+  "cat": "statute",
+  "q": "What is the minimum punishment for rape under BNS section 64?",
+  "pass": true,
+  "checks": {
+   "retrieval": true,
+   "facts": true,
+   "citations": true,
+   "no_error": true
+  },
+  "answer": "Under BNS § 64, the minimum punishment for rape is rigorous imprisonment for a term which shall not be less than ten years, but which may extend to imprisonment for life. [BNS § 64]\n\nNote: IPC § 376 is repealed and no longer in force; the corresponding provision is BNS § 64.",
+  "retrieved": [
+   "BNS § 64",
+   "IPC § 376"
+  ],
+  "t_retrieve": 0.0,
+  "t_answer": 4.4
+ },
+ {
+  "id": "S04",
+  "cat": "statute",
+  "q": "What is the punishment for theft under section 303 of the BNS?",
+  "pass": true,
+  "checks": {
+   "retrieval": true,
+   "facts": true,
+   "citations": true,
+   "no_error": true
+  },
+  "answer": "Under section 303 of the Bharatiya Nyaya Sanhita, 2023 (BNS), the punishment for theft is as follows:\n\n- For the first conviction, the offender may be punished with imprisonment of either description for a term which may extend to three years, or with fine, or with both.\n- For second or subsequent convictions, the punishment is rigorous imprisonment for a term which shall not be less than one year but which may extend to five years, and with fine. \n- In cases where the value of the stolen property is less than five thousand rupees and the person is convicted for the first time, upon return of the value of property or restoration of the stolen property, the punishment may be community service instead of imprisonment.\n\n[Cited from BNS § 303]\n\nNote: IPC § 378 is repealed and no longer in force; the corresponding provision is BNS § 303.",
+  "retrieved": [
+   "BNS § 303",
+   "IPC § 378"
+  ],
+  "t_retrieve": 0.0,
+  "t_answer": 8.6
+ },
+ {
+  "id": "S05",
+  "cat": "statute",
+  "q": "What is the punishment for cheating under BNS 318?",
+  "pass": true,
+  "checks": {
+   "retrieval": true,
+   "facts": true,
+   "citations": true,
+   "no_error": true
+  },
+  "answer": "Under BNS § 318, the punishment for cheating varies based on the circumstances:\n\n1. For general cheating, the punishment is imprisonment of either description for a term which may extend to three years, or with fine, or with both.\n2. For cheating with the knowledge that it will cause wrongful loss to a person whose interest the cheater was bound to protect, the punishment is imprisonment of either description for a term which may extend to five years, or with fine, or with both.\n3. For cheating that involves inducing the delivery of property, making, altering, or destroying a valuable security, the punishment is imprisonment of either description for a term which may extend to seven years, and also liable to fine.\n\n[Cited from BNS § 318]",
+  "retrieved": [
+   "BNS § 318"
+  ],
+  "t_retrieve": 0.0,
+  "t_answer": 7.5
+ },
+ {
+  "id": "S06",
+  "cat": "statute",
+  "q": "What is the punishment for criminal intimidation under BNS section 351?",
+  "pass": true,
+  "checks": {
+   "retrieval": true,
+   "facts": true,
+   "citations": true,
+   "no_error": true
+  },
+  "answer": "Under BNS § 351, the punishment for criminal intimidation is:\n- Imprisonment of either description for a term which may extend to two years, or with fine, or with both.\n- If the threat involves causing death or grievous hurt, or destruction of property by fire, or an offence punishable with death or imprisonment for life, or with imprisonment for a term which may extend to seven years, or imputing unchastity to a woman, the punishment is imprisonment of either description for a term which may extend to seven years, or with fine, or with both.\n- If the threat is made anonymously or with precautions to conceal the identity of the person, the punishment is imprisonment of either description for a term which may extend to two years, in addition to the punishment provided for the offence under sub-section (1).\n\n[Cited from BNS § 351]\n\nNote: IPC § 503 is repealed and no longer in force; the corresponding provision is BNS § 351.",
+  "retrieved": [
+   "BNS § 351",
+   "IPC § 503"
+  ],
+  "t_retrieve": 0.0,
+  "t_answer": 8.7
+ },
+ {
+  "id": "S07",
+  "cat": "statute",
+  "q": "Under BNS section 85, what is the punishment for a husband who subjects a woman to cruelty?",
+  "pass": true,
+  "checks": {
+   "retrieval": true,
+   "facts": true,
+   "citations": true,
+   "no_error": true
+  },
+  "answer": "Under BNS § 85, a husband who subjects a woman to cruelty is punishable with imprisonment for a term which may extend to three years and shall also be liable to fine. [BNS § 85]\n\nNote: IPC § 498A is repealed and no longer in force; the corresponding provision is BNS § 85.",
+  "retrieved": [
+   "BNS § 85",
+   "IPC § 498A"
+  ],
+  "t_retrieve": 0.0,
+  "t_answer": 2.8
+ },
+ {
+  "id": "S08",
+  "cat": "statute",
+  "q": "What is the punishment under IPC 498A?",
+  "pass": true,
+  "checks": {
+   "retrieval": true,
+   "facts": true,
+   "repeal_note": true,
+   "citations": true,
+   "no_error": true
+  },
+  "answer": "Under the repealed Indian Penal Code, 1860, section 498A provided that the punishment for a husband or relative of the husband who subjects a woman to cruelty is imprisonment for a term which may extend to three years and a fine. [IPC § 498A]",
+  "retrieved": [
+   "IPC § 498A",
+   "BNS § 85"
+  ],
+  "t_retrieve": 0.0,
+  "t_answer": 3.5
+ },
+ {
+  "id": "S09",
+  "cat": "statute",
+  "q": "What does BNSS section 482 provide?",
+  "pass": true,
+  "checks": {
+   "retrieval": true,
+   "facts": true,
+   "citations": true,
+   "no_error": true
+  },
+  "answer": "BNSS section 482 provides a procedure for a person who has reason to believe they may be arrested on an accusation of a non-bailable offence to apply to the High Court or the Court of Session for a direction to be released on bail if arrested. The court may grant such a direction with conditions, including making oneself available for police interrogation, not making inducements or threats to witnesses, not leaving India without permission, and other conditions as specified. If the person is arrested and prepared to give bail, they will be released on bail. This section does not apply to cases involving the arrest under specific sections of the BNS. [BNSS § 482]",
+  "retrieved": [
+   "BNSS § 482"
+  ],
+  "t_retrieve": 0.0,
+  "t_answer": 6.8
+ },
+ {
+  "id": "S10",
+  "cat": "statute",
+  "q": "What is anticipatory bail and which section covers it?",
+  "pass": true,
+  "checks": {
+   "retrieval": true,
+   "facts": true,
+   "citations": true,
+   "no_error": true
+  },
+  "answer": "Anticipatory bail is a provision designed to protect a person who has reason to believe they may be arrested on an accusation of having committed a non-bailable offence. This provision is covered under [BNSS § 482].",
+  "retrieved": [
+   "BNSS § 482"
+  ],
+  "t_retrieve": 0.5,
+  "t_answer": 3.4
+ },
+ {
+  "id": "S11",
+  "cat": "statute",
+  "q": "Which BNSS section deals with information about a cognizable offence, the FIR?",
+  "pass": true,
+  "checks": {
+   "retrieval": true,
+   "facts": true,
+   "citations": true,
+   "no_error": true
+  },
+  "answer": "The section in the Bharatiya Nagarik Suraksha Sanhita, 2023 that deals with information about a cognizable offence and the First Information Report (FIR) is [BNSS § 173]. This section outlines the procedures for reporting cognizable offences to the police and how such information should be recorded.",
+  "retrieved": [
+   "BNSS § 169",
+   "BNSS § 173",
+   "BNSS § 174",
+   "BNSS § 35",
+   "BNSS § 531"
+  ],
+  "t_retrieve": 1.8,
+  "t_answer": 8.9
+ },
+ {
+  "id": "S12",
+  "cat": "statute",
+  "q": "When can the police arrest without a warrant under BNSS section 35?",
+  "pass": true,
+  "checks": {
+   "retrieval": true,
+   "facts": true,
+   "citations": true,
+   "no_error": true
+  },
+  "answer": "Under [BNSS § 35], a police officer may arrest without a warrant if any of the following conditions are met:\n1. The person commits a cognizable offence in the presence of a police officer.\n2. A reasonable complaint has been made, or credible information has been received, or a reasonable suspicion exists that the person has committed a cognizable offence punishable with imprisonment for a term which may be less than seven years, provided the arrest is necessary to prevent further offences, for proper investigation, to prevent evidence tampering, to prevent inducement or threat, or to ensure the person's presence in court.\n3. The person is credible information has been received that they have committed a cognizable offence punishable with imprisonment for a term which may extend to more than seven years or with death sentence, and the police officer has reason to believe they have committed the said offence.\n4. The person has been proclaimed as an offender.\n5. The person is in possession of stolen property.\n6. The person obstructs a police officer, escapes, or attempts to escape from lawful custody.\n7. The person is reasonably suspected of being a deserter from any of the Armed Forces of the Union.\n8. The person has been concerned in, or is reasonably suspected of having been concerned in, any act committed outside India that would be a cognizable offence if committed in India.\n\nThese arrests must be recorded in writing by the police officer.",
+  "retrieved": [
+   "BNSS § 35"
+  ],
+  "t_retrieve": 0.0,
+  "t_answer": 16.5
+ },
+ {
+  "id": "S13",
+  "cat": "statute",
+  "q": "What is the longest period a magistrate can authorise detention in police custody under BNSS 187?",
+  "pass": false,
+  "checks": {
+   "retrieval": true,
+   "facts": false,
+   "citations": true,
+   "no_error": true
+  },
+  "answer": "Under [BNSS § 187(3)], the longest period a magistrate can authorise detention in police custody is:\n\n- Ninety days for offences punishable with death, imprisonment for life, or imprisonment for a term of ten years or more.\n- Sixty days for other offences.\n\nAfter these periods, the accused must be released on bail if willing to furnish it. [BNSS § 187]",
+  "retrieved": [
+   "BNSS § 187"
+  ],
+  "t_retrieve": 0.0,
+  "t_answer": 6.9
+ },
+ {
+  "id": "S14",
+  "cat": "statute",
+  "q": "What is the punishment for cheque bounce under section 138 of the Negotiable Instruments Act?",
+  "pass": true,
+  "checks": {
+   "retrieval": true,
+   "facts": true,
+   "citations": true,
+   "no_error": true
+  },
+  "answer": "Under Section 138 of the Negotiable Instruments Act, 1881, the punishment for cheque bounce includes imprisonment for a term which may be extended to two years, or a fine which may extend to twice the amount of the cheque, or both. [NIA § 138]",
+  "retrieved": [
+   "NIA § 138"
+  ],
+  "t_retrieve": 0.0,
+  "t_answer": 5.6
+ },
+ {
+  "id": "S15",
+  "cat": "statute",
+  "q": "Within how many days must the payee send a notice after the cheque is returned unpaid, under section 138 NI Act?",
+  "pass": true,
+  "checks": {
+   "retrieval": true,
+   "facts": true,
+   "citations": true,
+   "no_error": true
+  },
+  "answer": "The payee or the holder in due course of the cheque must send a notice within thirty days of receiving information from the bank regarding the return of the cheque as unpaid. [NIA § 138]",
+  "retrieved": [
+   "NIA § 138"
+  ],
+  "t_retrieve": 0.0,
+  "t_answer": 3.2
+ },
+ {
+  "id": "S16",
+  "cat": "statute",
+  "q": "What presumption does section 139 of the Negotiable Instruments Act create?",
+  "pass": true,
+  "checks": {
+   "retrieval": true,
+   "facts": true,
+   "citations": true,
+   "no_error": true
+  },
+  "answer": "Section 139 of the Negotiable Instruments Act, 1881, creates a presumption that the holder of a cheque received it for the discharge, in whole or in part, of any debt or other liability, unless the contrary is proved. [NIA § 139]",
+  "retrieved": [
+   "NIA § 139"
+  ],
+  "t_retrieve": 0.0,
+  "t_answer": 4.1
+ },
+ {
+  "id": "S17",
+  "cat": "statute",
+  "q": "Who is liable when a company commits an offence under section 138, according to section 141 of the NI Act?",
+  "pass": true,
+  "checks": {
+   "retrieval": true,
+   "facts": true,
+   "citations": true,
+   "no_error": true
+  },
+  "answer": "According to section 141 of the Negotiable Instruments Act, 1881, if a company commits an offence under section 138, both the company and any person who was in charge of and responsible for the company's business at the time of the offence are liable. However, this liability does not apply if the person proves they were unaware of the offence or exercised due diligence to prevent it. [NIA § 141]",
+  "retrieved": [
+   "NIA § 141"
+  ],
+  "t_retrieve": 0.0,
+  "t_answer": 8.3
+ },
+ {
+  "id": "S18",
+  "cat": "statute",
+  "q": "Is electronic evidence admissible under the Bharatiya Sakshya Adhiniyam, and under which section?",
+  "pass": true,
+  "checks": {
+   "retrieval": true,
+   "facts": true,
+   "citations": true,
+   "no_error": true
+  },
+  "answer": "Yes, electronic evidence is admissible under the Bharatiya Sakshya Adhiniyam, 2023. This is governed by [BSA § 63], which states that any information contained in an electronic record, if certain conditions are met, can be deemed a document and admitted as evidence without the need to produce the original.\n\nNote: IEA § 82 is repealed and no longer in force.",
+  "retrieved": [
+   "BSA § 63",
+   "BSA § 57",
+   "BNSS § 70",
+   "IEA § 82",
+   "IEA § 65B"
+  ],
+  "t_retrieve": 2.5,
+  "t_answer": 12.9
+ },
+ {
+  "id": "S19",
+  "cat": "statute",
+  "q": "What was section 65B of the Indian Evidence Act about?",
+  "pass": true,
+  "checks": {
+   "retrieval": true,
+   "facts": true,
+   "repeal_note": true,
+   "citations": true,
+   "no_error": true
+  },
+  "answer": "Section 65B of the Indian Evidence Act, 1872, dealt with the admissibility of electronic records. It stated that electronic records, when printed on paper, stored, recorded, or copied in optical or magnetic media, could be admitted as evidence in proceedings, provided certain conditions were met. These conditions included regular use of the computer, regular feeding of information, and proper operation of the computer. [IEA § 65B]\n\nNote: IEA § 65B is repealed and no longer in force; the corresponding provision is BSA § 63.",
+  "retrieved": [
+   "IEA § 65B",
+   "BSA § 63"
+  ],
+  "t_retrieve": 0.0,
+  "t_answer": 12.4
+ },
+ {
+  "id": "S20",
+  "cat": "statute",
+  "q": "Is IPC section 302 still in force?",
+  "pass": true,
+  "checks": {
+   "retrieval": true,
+   "facts": true,
+   "citations": true,
+   "no_error": true
+  },
+  "answer": "No, IPC § 302 is no longer in force. It was repealed and replaced by BNS § 103, which came into effect on 1 July 2024. [BNS § 103]",
+  "retrieved": [
+   "IPC § 302",
+   "BNS § 103"
+  ],
+  "t_retrieve": 0.0,
+  "t_answer": 5.3
+ }
+]

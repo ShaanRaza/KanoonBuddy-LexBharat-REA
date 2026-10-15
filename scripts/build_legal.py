@@ -150,6 +150,7 @@ PRIVACY = f"""
 <li><strong>Chats:</strong> deleted automatically after {C['chat_retention_days']} days. You can delete them earlier.</li>
 <li><strong>Saved documents and account details:</strong> kept until you delete them or your account.</li>
 <li><strong>Deleted accounts:</strong> when you ask us to delete your account we keep it for {C['deletion_grace_days']} days so you can change your mind, then permanently delete the account, your chats and your documents. Backups, if any, are overwritten on a regular cycle.</li>
+<li><strong>Feedback you send:</strong> the message, the page you were on and your account email, kept until we have read and acted on it, or until you ask us to delete it.</li>
 <li><strong>Server logs:</strong> up to {C['log_retention_days']} days.</li>
 <li>We may keep limited records for longer where the law requires it.</li>
 </ul>

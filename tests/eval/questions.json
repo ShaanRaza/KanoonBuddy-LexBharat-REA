@@ -674,5 +674,198 @@
     "tenant"
    ]
   ]
+ },
+ {
+  "id": "A01",
+  "cat": "practice",
+  "q": "My client's cheque was dishonoured. What is the procedure and time limits for a complaint under section 138?",
+  "src": [
+   "NIA § 138",
+   "NIA § 142"
+  ],
+  "all": [
+   [
+    "15",
+    "fifteen"
+   ],
+   [
+    "30",
+    "thirty",
+    "one month"
+   ]
+  ]
+ },
+ {
+  "id": "A02",
+  "cat": "practice",
+  "q": "Which section of BNSS deals with bail for offences punishable with death or life imprisonment?",
+  "src": [
+   "BNSS § 480"
+  ],
+  "all": [
+   [
+    "480"
+   ]
+  ]
+ },
+ {
+  "id": "A03",
+  "cat": "practice",
+  "q": "Can a Magistrate take cognizance of an offence on a police report?",
+  "src": [
+   "BNSS § 210"
+  ],
+  "all": [
+   [
+    "210"
+   ]
+  ]
+ },
+ {
+  "id": "A04",
+  "cat": "practice",
+  "q": "What is the difference between culpable homicide and murder?",
+  "src": [
+   "BNS § 100",
+   "BNS § 101"
+  ]
+ },
+ {
+  "id": "A05",
+  "cat": "practice",
+  "q": "What replaced section 377 IPC?",
+  "all": [
+   [
+    "no corresponding",
+    "not have",
+    "no section",
+    "not re-enacted",
+    "no counterpart",
+    "omitted"
+   ]
+  ],
+  "none": [
+   "replaced by [BNS § 377]"
+  ]
+ },
+ {
+  "id": "A06",
+  "cat": "practice",
+  "q": "What are the essential ingredients of cheating?",
+  "src": [
+   "BNS § 318"
+  ],
+  "none": [
+   "378"
+  ]
+ },
+ {
+  "id": "A07",
+  "cat": "practice",
+  "q": "Is section 124A IPC still law?",
+  "src": [
+   "BNS § 152"
+  ],
+  "all": [
+   [
+    "not re-enacted",
+    "different",
+    "new offence",
+    "repealed",
+    "no longer"
+   ]
+  ]
+ },
+ {
+  "id": "A08",
+  "cat": "practice",
+  "q": "What are the grounds on which police can arrest without warrant under BNSS?",
+  "src": [
+   "BNSS § 35"
+  ]
+ },
+ {
+  "id": "A09",
+  "cat": "practice",
+  "q": "mere dost ne udhaar paise nahi lautaye, kya karu?",
+  "all": [
+   [
+    "english"
+   ]
+  ]
+ },
+ {
+  "id": "A10",
+  "cat": "practice",
+  "q": "hi",
+  "all": [
+   [
+    "kanoonbuddy"
+   ]
+  ]
+ },
+ {
+  "id": "K01",
+  "cat": "landmark",
+  "q": "What did the Supreme Court hold in Kesavananda Bharati?",
+  "case": "1973_INSC_91",
+  "all": [
+   [
+    "basic structure"
+   ],
+   [
+    "amend"
+   ]
+  ],
+  "none": [
+   "fundamental rights are beyond"
+  ]
+ },
+ {
+  "id": "K02",
+  "cat": "landmark",
+  "q": "What was decided in Minerva Mills v. Union of India?",
+  "case": "1980_INSC_142",
+  "all": [
+   [
+    "basic structure"
+   ],
+   [
+    "42nd",
+    "limited",
+    "amending"
+   ]
+  ]
+ },
+ {
+  "id": "K03",
+  "cat": "landmark",
+  "q": "What did Arnesh Kumar v. State of Bihar decide?",
+  "case": "2014_INSC_463",
+  "all": [
+   [
+    "arrest"
+   ],
+   [
+    "necessary",
+    "41",
+    "35"
+   ]
+  ]
+ },
+ {
+  "id": "K04",
+  "cat": "landmark",
+  "q": "What did Puttaswamy decide about privacy?",
+  "case": "2017_INSC_801",
+  "all": [
+   [
+    "fundamental right"
+   ],
+   [
+    "article 21",
+    "21"
+   ]
+  ]
  }
 ]

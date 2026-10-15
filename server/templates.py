@@ -8,6 +8,7 @@ Body mini-format (one item per line, blank line between paragraphs):
     ## Heading         sub-heading
     @ text             auto-numbered paragraph (1., 2., ...)
     ?key text          line printed only if field `key` is filled (works with @ too: "?key @ text")
+    !key text          line printed only if field `key` is empty
     {{key}}            field value; [LABEL] if empty
 
 These are general starting points, not legal advice. Stamp duty, registration and format rules differ by State.
@@ -168,7 +169,8 @@ I, {{name}}, {{relation}} {{relative_name}}, aged about {{age}} years, resident 
                    F("recipient", "Recipient's name"), F("recipient_address", "Recipient's address", kind="textarea"),
                    F("background", "What happened (dates, agreement, payments)", kind="textarea"),
                    F("breach", "How the recipient failed", kind="textarea"), F("demand", "What you demand (amount or action)"),
-                   F("days", "Days to comply", kind="number"), F("consequence", "What you will do if they do not comply", required=False)],
+                   F("days", "Days to comply", kind="number"), F("consequence", "What you will do if they do not comply", required=False),
+                   F("advocate", "Advocate sending the notice (optional)", "Name, e.g. Priya Nair. Leave blank if you are sending it yourself", required=False), F("advocate_details", "Advocate's enrolment no. / office address (optional)", kind="textarea", required=False)],
         "notes": ["Send by registered post AD and by email, and keep the receipts and delivery proof.",
                   "Keep the facts accurate and avoid threats beyond legal remedies. Have a lawyer review before sending."],
         "body": """# LEGAL NOTICE
@@ -183,7 +185,9 @@ Subject: Notice demanding {{demand}}
 
 Sir / Madam,
 
-Under instructions from and on behalf of my client / I, {{sender}}, resident of {{sender_address}}, hereby give you notice as follows:
+!advocate I, {{sender}}, resident of {{sender_address}}, hereby give you notice as follows:
+
+?advocate Under instructions from and on behalf of my client {{sender}}, resident of {{sender_address}}, I, {{advocate}}, Advocate, hereby give you notice as follows:
 
 @ {{background}}
 
@@ -193,11 +197,15 @@ Under instructions from and on behalf of my client / I, {{sender}}, resident of 
 
 ?consequence @ That if you fail to do so, {{consequence}}, at your risk as to costs and consequences.
 
-@ That this notice is without prejudice to all my other rights and remedies available in law, all of which are reserved.
+@ That this notice is without prejudice to all rights and remedies available in law, all of which are reserved.
 
 Yours faithfully,
 
-{{sender}}"""},
+!advocate {{sender}}
+
+?advocate {{advocate}}
+?advocate {{advocate_details}}
+?advocate (for {{sender}})"""},
 
     {
         "id": "legal_notice_cheque", "category": "Notices", "title": "Legal notice: cheque dishonour (Section 138, NI Act)",
@@ -207,7 +215,8 @@ Yours faithfully,
                    F("cheque_no", "Cheque number"), F("cheque_date", "Cheque date"), F("amount", "Cheque amount (Rs.)"),
                    F("drawn_on", "Drawer's bank and branch"), F("payee_bank", "Bank where you presented it"),
                    F("presented_on", "Date presented"), F("returned_on", "Date returned / memo received"), F("reason", "Reason given in the return memo (e.g. funds insufficient)"),
-                   F("liability", "Debt or liability the cheque was for", kind="textarea")],
+                   F("liability", "Debt or liability the cheque was for", kind="textarea"),
+                   F("advocate", "Advocate sending the notice (optional)", "Name, e.g. Priya Nair. Leave blank if you are sending it yourself", required=False), F("advocate_details", "Advocate's enrolment no. / office address (optional)", kind="textarea", required=False)],
         "notes": ["Timing matters. The notice must be sent within 30 days of receiving the bank's information that the cheque was returned unpaid. "
                   "The drawer then has 15 days from receiving the notice to pay. A complaint can be filed only after those 15 days pass without payment, "
                   "and within one month after that. Confirm the current rules and limits with a lawyer.",
@@ -224,21 +233,29 @@ Subject: Notice for dishonour of cheque no. {{cheque_no}} dated {{cheque_date}} 
 
 Sir / Madam,
 
-I, {{sender}}, resident of {{sender_address}}, give you notice as follows:
+!advocate I, {{sender}}, resident of {{sender_address}}, give you notice as follows:
 
-@ That you issued cheque no. {{cheque_no}} dated {{cheque_date}} for Rs. {{amount}}, drawn on {{drawn_on}}, in my favour in discharge of the following legally enforceable debt or liability: {{liability}}.
+?advocate Under instructions from and on behalf of my client {{sender}}, resident of {{sender_address}}, I, {{advocate}}, Advocate, give you notice as follows:
 
-@ That I presented the cheque through {{payee_bank}} on {{presented_on}}. The cheque was returned unpaid on {{returned_on}} with the remark: "{{reason}}".
+@ That you issued cheque no. {{cheque_no}} dated {{cheque_date}} for Rs. {{amount}}, drawn on {{drawn_on}}, in favour of {{sender}} in discharge of the following legally enforceable debt or liability: {{liability}}.
+
+@ That the cheque was presented through {{payee_bank}} on {{presented_on}} and was returned unpaid on {{returned_on}} with the remark: "{{reason}}".
 
 @ That the dishonour of the cheque amounts to an offence under Section 138 of the Negotiable Instruments Act, 1881.
 
 @ That I hereby call upon you to pay Rs. {{amount}}, being the cheque amount, within fifteen (15) days of receipt of this notice.
 
-@ That if you fail to make the payment within the said period, I shall initiate criminal proceedings against you under Section 138 read with Section 142 of the said Act, in addition to civil remedies for recovery, at your risk as to costs and consequences.
+!advocate @ That if you fail to make the payment within the said period, I shall initiate criminal proceedings against you under Section 138 read with Section 142 of the said Act, in addition to civil remedies for recovery, at your risk as to costs and consequences.
+
+?advocate @ That if you fail to make the payment within the said period, my client shall initiate criminal proceedings against you under Section 138 read with Section 142 of the said Act, in addition to civil remedies for recovery, at your risk as to costs and consequences.
 
 Yours faithfully,
 
-{{sender}}"""},
+!advocate {{sender}}
+
+?advocate {{advocate}}
+?advocate {{advocate_details}}
+?advocate (for {{sender}})"""},
 
     {
         "id": "rent_agreement", "category": "Agreements", "title": "Rent agreement (residential, 11 months)",
@@ -415,14 +432,26 @@ def render(template_id: str, values: dict) -> dict:
     missing = [f["key"] for f in t["fields"] if f["required"] and f["key"] not in filled_keys]
     n = 0
     out = []    # (kind, text)
-    for block in re.split(r"\n\s*\n", t["body"].strip()):
+    kept_lines = []
+    for ln in t["body"].strip().split("\n"):     # conditions apply line by line
+        cm = re.match(r"([?!])(\w+)\s+(.*)", ln.lstrip(), re.S)
+        if cm:
+            if (cm.group(2) in filled_keys) != (cm.group(1) == "?"):
+                continue
+            ln = cm.group(3)
+        kept_lines.append(ln)
+    body_text = "\n".join(kept_lines)
+    for block in re.split(r"\n\s*\n", body_text):
+        if not block.strip():
+            continue
         lines = [ln for ln in block.split("\n")]
         first = lines[0].lstrip()
-        cond = re.match(r"\?(\w+)\s+(.*)", first, re.S)
+        cond = re.match(r"([?!])(\w+)\s+(.*)", first, re.S)
         if cond:
-            if cond.group(1) not in filled_keys:
+            present = cond.group(2) in filled_keys
+            if present != (cond.group(1) == "?"):
                 continue
-            lines[0] = cond.group(2)
+            lines[0] = cond.group(3)
             first = lines[0].lstrip()
         # numbered list expansion: {{key:numbered}} -> one auto-numbered paragraph per line of the value
         m = re.fullmatch(r"\{\{(\w+):numbered\}\}", first.strip())

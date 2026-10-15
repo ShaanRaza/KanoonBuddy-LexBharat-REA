@@ -3,6 +3,7 @@
 Run:  ./run.sh   (needs /Volumes/LAWSSD mounted; Qdrant optional for similarity)
 Everything outside the legal-data endpoints is stubbed so the saved front end loads.
 """
+import json
 import logging
 import os
 import re
@@ -14,10 +15,11 @@ import duckdb
 from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi import File, Form, UploadFile
 from starlette.concurrency import run_in_threadpool
-from fastapi.responses import RedirectResponse, FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, RedirectResponse, Response
 
 from server import topic
 from server import docparse
+from server import landmarks
 from server import templates as doc_templates
 from server import auth  # noqa: E402
 
@@ -95,6 +97,8 @@ class SecurityHeaders:
                     extra[b"strict-transport-security"] = b"max-age=31536000; includeSubDomains"
                 if scope.get("path", "").startswith("/api/"):
                     extra[b"cache-control"] = b"no-store"  # never cache personal or authenticated API data
+                else:
+                    extra[b"cache-control"] = b"no-cache"  # pages and scripts: always revalidate, so updates reach users straight away
                 present = {k.lower() for k, _ in h}
                 h.extend((k, v) for k, v in extra.items() if k not in present)
             await send(msg)
@@ -480,7 +484,15 @@ def statute_section(act: str, section: str):
     d = dict(statute_section_plain(code, section))
     d["text"] = _display_text(d["text"])
     # interpretedBy: the section screen requires the list; judgments that interpret a section are not indexed yet
-    return {"section": d, "equivalent": _equivalent_payload(code, d["title"]), "interpretedBy": [], "interpretedByTotal": 0}
+    eqp = _equivalent_payload(code, d["title"])
+    if eqp is None:      # no matching heading: use the verified old-to-new concordance if there is one
+        from server import nyra as _nyra
+        cc = _nyra.CONCORDANCE.get((code, section.upper()))
+        if cc and cc in CLEAN:
+            o = statute_section_plain(*cc)
+            eqp = {"actCode": cc[0], "actFullName": ACT_CODES[cc[0]][1], "number": cc[1], "label": f"§ {cc[1]}", "title": o["title"],
+                   "text": o["text"], "status": o["status"], "basis": "official correspondence table"}
+    return {"section": d, "equivalent": eqp, "interpretedBy": [], "interpretedByTotal": 0}
 
 
 # --------------------------------------------------------------------------- cases
@@ -640,6 +652,73 @@ def _case_file(case_id: str):
         if r:
             return str(CORPUS / f"in_{r[0]}_judgments.parquet")
     return str(CORPUS / "in_supreme-court_judgments.parquet")
+
+
+MAX_VIEW_CHARS = 6_000_000
+_HEADER = re.compile(r"^Case:.*?Section:\s*[A-Z_ ]+\s*", re.S)
+
+
+def _judgment_view(case_id: str):
+    """Readable text of a judgment: the 'body' chunks, with the overlapping parts removed, in order, each with its page."""
+    rows = db.execute(
+        "SELECT char_start, char_end, page_start, text FROM read_parquet(?) WHERE case_id=? AND section_type='body' "
+        "ORDER BY char_start, char_end DESC", [_case_file(case_id), case_id]).fetchall()
+    if not rows:   # some records have no 'body' chunks: fall back to everything except the duplicate 'paragraph' stream
+        rows = db.execute(
+            "SELECT char_start, char_end, page_start, text FROM read_parquet(?) WHERE case_id=? AND section_type<>'paragraph' "
+            "ORDER BY char_start, char_end DESC", [_case_file(case_id), case_id]).fetchall()
+    out, end, total = [], -1, 0
+    for cs, ce, page, text in rows:
+        body = _HEADER.sub("", text or "", count=1)
+        body = re.sub(r"\[SECTION\]|\[PARAGRAPH\]|\[BODY\]", " ", body)
+        body = re.sub(r"(?m)(?:^|\s)#{2,}\s+", " ", body)
+        if cs is None or ce is None:
+            continue
+        if cs < end:                      # overlaps what we already have: keep only the new tail
+            if ce <= end:
+                continue
+            body = body[min(len(body), end - cs):]
+        if not body.strip():
+            continue
+        end = max(end, ce)
+        total += len(body)
+        out.append({"page": page, "text": body})
+        if total > MAX_VIEW_CHARS:
+            return out, True
+    return out, False
+
+
+@app.get("/api/cases/{case_id}")
+def case_view(case_id: str, request: Request):
+    need("cases")
+    r = _case_row(case_id)
+    if not r:
+        raise HTTPException(404, "Case not found")
+    d = db.execute("SELECT disposition, case_number FROM cases WHERE case_id=?", [case_id]).fetchone()
+    if d is None and _ready.get("hc"):
+        d = db.execute("SELECT disposition, case_number FROM hc.hc_cases WHERE case_id=? LIMIT 1", [case_id]).fetchone()
+    parts, truncated = _judgment_view(case_id)
+    payload = {"id": case_id, "title": r[1], "court": r[2], "citation": r[3], "year": r[4], "date": str(r[5] or "")[:10],
+            "disposition": d[0] if d else None, "caseNumber": d[1] if d else None, "alsoCited": _parallel_cites(case_id),
+            "citedBy": _cited_by_count(case_id), "supreme": "_INSC_" in case_id, "parts": parts, "truncated": truncated}
+    lm = landmarks.summary_for(case_id)
+    if lm:
+        payload["summary"] = {"heading": lm[0], "text": lm[1], "note": landmarks.EDITORIAL_NOTE}
+    body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
+    if "gzip" in request.headers.get("accept-encoding", ""):      # long judgments are several MB of text: compress them
+        import gzip
+        return Response(gzip.compress(body, 5), media_type="application/json", headers={"Content-Encoding": "gzip", "Vary": "Accept-Encoding"})
+    return Response(body, media_type="application/json")
+
+
+@app.get("/editor-guide", include_in_schema=False)
+def editor_guide():
+    return FileResponse(WEB / "editor-guide.html")
+
+
+@app.get("/case/{case_id}", include_in_schema=False)
+def case_page(case_id: str):
+    return FileResponse(WEB / "case.html")
 
 
 @app.post("/api/research/v3/search")
@@ -999,6 +1078,36 @@ def subscription_plans():
     return {"plans": []}
 
 
+_fb_lock = threading.Lock()
+
+
+@app.post("/api/widget-feedback")
+async def widget_feedback(request: Request):
+    """The Feedback tab: store what the user wrote, with their account and page, in data/feedback.jsonl (read it with: tail data/feedback.jsonl)."""
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+    if not isinstance(body, dict) or not str(body.get("comment") or "").strip():
+        return JSONResponse({"error": "Please write something first."}, status_code=422)
+    try:
+        auth.limiter.hit(f"feedback:{request.state.user['id']}", 6, 3600)
+    except auth.AuthError:
+        return JSONResponse({"error": "You've sent a lot of feedback. Please try again later."}, status_code=429)
+    rec = {"at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), "user": request.state.user["email"],
+           "type": str(body.get("type") or "")[:30], "page": str(body.get("page") or "")[:200], "comment": str(body["comment"])[:4000]}
+    path = Path(os.environ.get("LEXBHARAT_DATA", ROOT / "data")) / "feedback.jsonl"
+    with _fb_lock:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with open(path, "a", encoding="utf-8") as f:
+            f.write(json.dumps(rec, ensure_ascii=False) + "\n")
+        try:
+            os.chmod(path, 0o600)
+        except OSError:
+            pass
+    return {"ok": True}
+
+
 @app.get("/api/templates")
 def templates_list():
     return {"templates": doc_templates.public_list()}
@@ -1116,6 +1225,23 @@ for _p in ("about", "firms", "mobile", "pricing", "findmylawyer", "findmylawyer/
            "get-demo", "blog", "blog/videos", "docs", "tutorials", "whatsapp", "marketing/activate", "classic", "old",
            "signed-out", "contact", "leads"):
     app.add_api_route(f"/{_p}", _to_home, methods=["GET"], include_in_schema=False)
+
+
+def _to_dashboard():
+    return RedirectResponse("/dashboard", status_code=302)
+
+
+# In-app pages for features this build does not have (billing, marketplace, support desk, matters tools, firm workspaces).
+for _p in ("billing", "account/marketplace", "account/referrals", "leads", "support", "tutorials", "team", "workspace", "recordings",
+           "whatsapp", "firms", "client", "intake", "classic", "old"):
+    app.add_api_route(f"/{_p}", _to_dashboard, methods=["GET"], include_in_schema=False)
+app.add_api_route("/workspace/{rest:path}", lambda rest: _to_dashboard(), methods=["GET"], include_in_schema=False)
+
+# Public tool pages from the original site: their generators call servers this build does not have.
+for _p in ("tools", "affidavit", "rent-agreement", "cheque-bounce", "consumer-complaint", "cause-list", "causelist", "formats"):
+    app.add_api_route(f"/{_p}", _to_home, methods=["GET"], include_in_schema=False)
+for _p in ("tools", "formats"):
+    app.add_api_route(f"/{_p}/{{rest:path}}", (lambda rest: _to_home()), methods=["GET"], include_in_schema=False)
 
 
 @app.get("/{path:path}")

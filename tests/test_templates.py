@@ -31,7 +31,7 @@ class TemplateTests(unittest.TestCase):
     def test_every_placeholder_has_a_field(self):
         for t in T.TEMPLATES:
             keys = {f["key"] for f in t["fields"]}
-            used = set(re.findall(r"\{\{(\w+)(?::\w+)?\}\}", t["body"])) | set(re.findall(r"^\?(\w+)\s", t["body"], re.M))
+            used = set(re.findall(r"\{\{(\w+)(?::\w+)?\}\}", t["body"])) | set(re.findall(r"^[?!](\w+)\s", t["body"], re.M))
             self.assertLessEqual(used, keys, f"{t['id']}: undefined fields {used - keys}")
 
     def test_filled_template_has_no_leftover_markers(self):
@@ -56,6 +56,19 @@ class TemplateTests(unittest.TestCase):
         nums = [int(n) for n in re.findall(r"(?m)^(\d+)\. ", txt)]
         self.assertEqual(nums, list(range(1, len(nums) + 1)))
         self.assertNotIn("before shifting", txt)
+
+    def test_advocate_mode_changes_the_wording(self):
+        for tid in ("legal_notice_cheque", "legal_notice_general"):
+            v = full_values(T.BY_ID[tid])
+            v.pop("advocate", None); v.pop("advocate_details", None)
+            own = T.render(tid, v)["text"]
+            self.assertNotIn("on behalf of my client", own, tid)
+            v["advocate"] = "Priya Nair"
+            adv = T.render(tid, v)["text"]
+            self.assertIn("on behalf of my client", adv, tid)
+            self.assertIn("I, Priya Nair, Advocate", adv, tid)
+            self.assertNotIn("?advocate", adv, tid)
+            self.assertNotRegex(adv, r"\[[A-Z][A-Z '/()\-]+\]", f"{tid} left a placeholder")
 
     def test_html_is_escaped(self):
         r = T.render("affidavit_general", {"name": "<script>alert(1)</script>", "facts": "a < b & c"})

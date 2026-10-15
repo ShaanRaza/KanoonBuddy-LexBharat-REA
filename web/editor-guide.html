@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex">
+<meta name="color-scheme" content="light dark"><title>Editor guide · LexBharat</title>
+<style>
+:root { --bg:#fafaf9; --card:#fff; --fg:#1c1917; --mut:#6b6761; --line:#e7e5e4; --acc:#c2571a; }
+@media (prefers-color-scheme: dark) { :root { --bg:#141413; --card:#1d1c1b; --fg:#f5f4f2; --mut:#a09b94; --line:#33312f; --acc:#e8742c; } }
+* { box-sizing:border-box }
+body { margin:0; background:var(--bg); color:var(--fg); font:16px/1.6 system-ui,-apple-system,"Segoe UI",sans-serif }
+.wrap { max-width:760px; margin:0 auto; padding:0 20px 80px }
+header { display:flex; justify-content:space-between; align-items:center; padding:18px 0 }
+.brand { font:600 22px/1 Georgia,serif; color:var(--fg); text-decoration:none }
+a { color:var(--acc) }
+h1 { font:600 32px/1.15 Georgia,serif; margin:28px 0 8px }
+.lede { color:var(--mut); margin:0 0 24px }
+.btn { display:inline-block; background:var(--acc); color:#fff; padding:10px 18px; border-radius:10px; font-weight:700; text-decoration:none }
+h2 { font:600 20px/1.3 Georgia,serif; margin:34px 0 8px }
+.card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:14px 18px; margin:10px 0 }
+.card h3 { margin:0 0 4px; font-size:16px } .card p { margin:0; color:var(--mut); font-size:15px }
+kbd { background:var(--card); border:1px solid var(--line); border-bottom-width:2px; border-radius:6px; padding:1px 6px; font:13px ui-monospace,monospace }
+table { border-collapse:collapse; width:100%; font-size:15px } td { border-top:1px solid var(--line); padding:8px 6px; vertical-align:top } td:first-child { white-space:nowrap; padding-right:16px }
+.soon { font-size:12px; font-weight:700; color:var(--acc); background:rgba(194,87,26,.1); border-radius:6px; padding:1px 6px; margin-left:6px }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header><a class="brand" href="/">LexBharat</a><a href="/editor">Open the editor</a></header>
+  <h1>Editor guide</h1>
+  <p class="lede">A plain document editor with legal templates, file import and an assistant beside it. Here is what each part does, and what it does not do yet.</p>
+  <a class="btn" href="/editor">Open the editor</a>
+
+  <h2>What you can do</h2>
+  <div class="card"><h3>Start from a template</h3><p>Click <b>Templates</b>. Pick a standard Indian document (affidavits, legal notices, a rent agreement, an NDA, a power of attorney), fill in the form, and insert it. Blank fields stay as [BRACKETS] for you to complete. The notices have an optional box for the advocate sending them.</p></div>
+  <div class="card"><h3>Import a file</h3><p>Click <b>Import</b> to bring in a PDF, Word (.docx), text or RTF file, or a scanned image or PDF (read with OCR, up to 30 pages). Old .doc files must be saved as .docx first.</p></div>
+  <div class="card"><h3>Ask KanoonBuddy</h3><p>Open the assistant to ask legal questions while you write. Under each reply, <b>Insert into document</b> puts it at your cursor and <b>Copy</b> copies it. Drafts written by the assistant can be wrong, so always read and edit them.</p></div>
+  <div class="card"><h3>Check document</h3><p>Click <b>Check</b> to find blanks you have not filled in, check every section and case you cite against the library, and see whether any cited law is repealed.</p></div>
+  <div class="card"><h3>Save and come back</h3><p>Click <b>Save</b>. Your documents are kept in your account, under My Documents (the panel icon at the top left). The first line becomes the title.</p></div>
+
+  <h2>Keys</h2>
+  <table>
+    <tr><td><kbd>Enter</kbd> or <kbd>Cmd/Ctrl</kbd>+<kbd>Enter</kbd></td><td>New paragraph</td></tr>
+    <tr><td><kbd>Shift</kbd>+<kbd>Enter</kbd></td><td>Line break inside the same paragraph</td></tr>
+    <tr><td><kbd>Cmd/Ctrl</kbd>+<kbd>B</kbd> / <kbd>I</kbd> / <kbd>U</kbd></td><td>Bold, italic, underline</td></tr>
+    <tr><td><kbd>Cmd/Ctrl</kbd>+<kbd>Z</kbd></td><td>Undo (add <kbd>Shift</kbd> to redo)</td></tr>
+    <tr><td><kbd>Cmd/Ctrl</kbd>+<kbd>F</kbd></td><td>Find in the document</td></tr>
+  </table>
+
+  <h2>Not available yet</h2>
+  <div class="card"><h3>Export <span class="soon">Not yet</span></h3><p>Download as Word or PDF is not built. For now, copy your text into Word.</p></div>
+  <div class="card"><h3>Court-specific formatting and tracked changes <span class="soon">Not yet</span></h3><p>The editor does not detect the court or apply court margins, and the assistant does not rewrite selected text or track changes. It only replies in the chat.</p></div>
+  <p class="lede" style="margin-top:28px">LexBharat is a research aid, not legal advice. Check every section, citation and draft against the official source.</p>
+</div>
+</body>
+</html>

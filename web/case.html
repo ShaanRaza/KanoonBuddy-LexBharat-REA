@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex">
+<meta name="color-scheme" content="light dark"><title>Judgment · LexBharat</title>
+<style>
+:root { --bg:#fafaf9; --card:#fff; --fg:#1c1917; --mut:#6b6761; --line:#e7e5e4; --acc:#c2571a; --warn:#fffbeb; --warnline:#fde68a; }
+@media (prefers-color-scheme: dark) { :root { --bg:#141413; --card:#1d1c1b; --fg:#f5f4f2; --mut:#a09b94; --line:#33312f; --acc:#e8742c; --warn:#2a2412; --warnline:#5c4a14; } }
+* { box-sizing:border-box }
+body { margin:0; background:var(--bg); color:var(--fg); font:16px/1.65 Georgia,"Times New Roman",serif }
+.bar { position:sticky; top:0; z-index:5; background:var(--bg); border-bottom:1px solid var(--line); padding:10px 16px; display:flex; gap:14px; align-items:center; flex-wrap:wrap; font:14px system-ui,sans-serif }
+.bar a { color:var(--acc); text-decoration:none; font-weight:600 } .bar a:hover { text-decoration:underline } .bar .sp { flex:1 }
+main { max-width:780px; margin:0 auto; padding:24px 16px 80px }
+h1 { font:700 24px/1.25 Georgia,serif; margin:0 0 6px }
+.meta { font:14px system-ui,sans-serif; color:var(--mut); margin:0 0 4px }
+.chips { display:flex; gap:8px; flex-wrap:wrap; margin:14px 0 18px; font:13px system-ui,sans-serif }
+.chip { border:1px solid var(--line); background:var(--card); border-radius:999px; padding:3px 10px }
+.note { background:var(--warn); border:1px solid var(--warnline); border-radius:10px; padding:10px 14px; margin:16px 0; font:13.5px/1.5 system-ui,sans-serif }
+.pg { font:12px system-ui,sans-serif; color:var(--mut); text-align:right; margin:22px 0 -6px; border-top:1px dashed var(--line); padding-top:6px }
+p { margin:0 0 14px; white-space:pre-wrap }
+.sum { border:1px solid var(--acc); border-left-width:5px; border-radius:10px; background:var(--card); padding:12px 16px; margin:16px 0; font:15px/1.55 system-ui,sans-serif }
+.sum b { display:block; margin-bottom:4px } .sum small { display:block; color:var(--mut); margin-top:8px; font-size:12.5px }
+.err { font:15px system-ui,sans-serif; padding:40px 0; text-align:center; color:var(--mut) }
+mark { background:#fde68a; color:#1c1917 }
+</style>
+</head>
+<body>
+<div class="bar"><a href="/search">&larr; Search</a><a id="similar" href="#" hidden>More like this</a><a id="graph" href="#" hidden>Citation map</a><span class="sp"></span>
+  <label style="color:var(--mut)">Find in text <input id="q" type="search" style="font:inherit;padding:4px 8px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--fg);width:170px"></label>
+  <span id="hits" style="color:var(--mut)"></span></div>
+<main id="m"><p class="err">Loading judgment&hellip;</p></main>
+<script>
+(function () {
+  var id = decodeURIComponent(location.pathname.replace(/^\/case\//, "").replace(/\/$/, ""));
+  function token() { try { return JSON.parse(localStorage.getItem("lawcentral_auth")).token; } catch (e) { return ""; } }
+  var m = document.getElementById("m");
+  function el(t, c, x) { var e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; }
+  function fail(msg) { m.textContent = ""; m.appendChild(el("p", "err", msg)); }
+  if (!token()) { location.replace("/signin?redirect=" + encodeURIComponent(location.pathname)); return; }
+  fetch("/api/cases/" + encodeURIComponent(id), { headers: { Authorization: "Bearer " + token() } }).then(function (r) {
+    if (r.status === 401) { location.replace("/signin?redirect=" + encodeURIComponent(location.pathname)); throw 0; }
+    if (r.status === 404) throw new Error("This judgment isn't in the library.");
+    if (!r.ok) throw new Error("Could not load the judgment. Try again.");
+    return r.json();
+  }).then(function (c) {
+    document.title = (c.title || "Judgment") + " · LexBharat";
+    m.textContent = "";
+    m.appendChild(el("h1", "", c.title || id));
+    m.appendChild(el("p", "meta", [c.court, c.date || c.year, c.caseNumber].filter(Boolean).join(" · ")));
+    var chips = el("div", "chips");
+    [c.citation].concat(c.alsoCited || []).filter(Boolean).forEach(function (x) { chips.appendChild(el("span", "chip", x)); });
+    if (c.disposition) chips.appendChild(el("span", "chip", "Outcome: " + c.disposition));
+    if (c.supreme) chips.appendChild(el("span", "chip", "Cited by " + c.citedBy + " later Supreme Court cases in this index"));
+    m.appendChild(chips);
+    if (c.summary) {
+      var sm = el("div", "sum"); sm.appendChild(el("b", "", "Key holding"));
+      sm.appendChild(document.createTextNode(c.summary.text)); sm.appendChild(el("small", "", c.summary.note));
+      m.appendChild(sm);
+    }
+    m.appendChild(el("div", "note", "This text is machine-read from the published judgment and can contain scanning errors, missing pages or formatting problems. " +
+      "Check the official copy before you quote or rely on it."));
+    if (!c.parts.length) { m.appendChild(el("p", "err", "The text of this judgment isn't available in the library.")); }
+    var last = null;
+    c.parts.forEach(function (p) {
+      if (p.page && p.page !== last) { m.appendChild(el("div", "pg", "Page " + p.page)); last = p.page; }
+      p.text.split(/\n\s*\n/).forEach(function (para) { para = para.replace(/\s+/g, " ").trim(); if (para) m.appendChild(el("p", "", para)); });
+    });
+    if (c.truncated) m.appendChild(el("div", "note", "This judgment is very long, so only the first part is shown here."));
+    if (c.supreme) {
+      var s = document.getElementById("similar"); s.href = "/similar.html?id=" + encodeURIComponent(id); s.hidden = false;
+      var g = document.getElementById("graph"); g.href = "/citation-graph?docId=" + encodeURIComponent(id) + "&label=" + encodeURIComponent(c.title || ""); g.hidden = false;
+    }
+    setupFind();
+  }).catch(function (e) { if (e) fail(e.message || "Could not load the judgment."); });
+
+  function setupFind() {
+    var q = document.getElementById("q"), hits = document.getElementById("hits"), base = [];
+    m.querySelectorAll("p").forEach(function (p) { base.push([p, p.textContent]); });
+    var t;
+    q.addEventListener("input", function () {
+      clearTimeout(t); t = setTimeout(function () {
+        var term = q.value.trim(), n = 0, first = null;
+        base.forEach(function (b) {
+          var p = b[0], text = b[1];
+          if (term.length < 2) { p.textContent = text; return; }
+          var low = text.toLowerCase(), tl = term.toLowerCase(), i = low.indexOf(tl);
+          if (i < 0) { p.textContent = text; return; }
+          p.textContent = "";
+          var pos = 0;
+          while (i >= 0) { p.appendChild(document.createTextNode(text.slice(pos, i))); p.appendChild(el("mark", "", text.slice(i, i + term.length))); pos = i + term.length; n++; i = low.indexOf(tl, pos); }
+          p.appendChild(document.createTextNode(text.slice(pos)));
+          if (!first) first = p;
+        });
+        hits.textContent = term.length < 2 ? "" : n + " match" + (n === 1 ? "" : "es");
+        if (first) first.scrollIntoView({ block: "center" });
+      }, 200);
+    });
+  }
+})();
+</script>
+</body>
+</html>

@@ -304,7 +304,7 @@
 /* LexBharat: controls for features that have no backend in this build (drafting, matters, attachments, dictation) */
 [aria-label="Draft a document"], [aria-label="All commands"], [aria-label="Attach a file"],
 [aria-label="Dictate (voice to text)"], [aria-label="Dictate"], [data-tour="matter-picker"],
-[aria-label^="Add a document, attach a case"], [aria-label="Record voice memo"] { display: none !important; }
+[aria-label^="Add a document, attach a case"], [aria-label="Record voice memo"], [aria-label="Notifications"] { display: none !important; }
 </style>
 <style id="lb-editor-help-css">
 .lb-ed-btn { font-weight: 700 !important; color: #111 !important; }
@@ -403,10 +403,16 @@
 /* LexBharat: hide composer chips for drafting and slash-commands, which have no backend in this build */
 (function () {
   var hide = /^(Draft|Commands)$/;
+  // Menu items and shortcuts for features this build does not have (billing, marketplace, support desk, matters, invoices).
+  var dead = /^(Billing|Marketplace|Tutorials|Support|Leads|Refer a colleague)(NEW)?$/i;
+  var chips = /^(Brief|Review|Expense|Invoice)$/;   // matter shortcuts under the dashboard input
   function sweep() {
+    document.querySelectorAll("a").forEach(function (a) { if (dead.test((a.textContent || "").replace(/\s+/g, ""))) a.style.display = "none"; });
     document.querySelectorAll("button").forEach(function (b) {
       var t = (b.textContent || "").trim();
       if (hide.test(t)) b.style.display = "none";
+      if (dead.test(t.replace(/\s+/g, ""))) b.style.display = "none";
+      if (chips.test(t) && location.pathname.indexOf("/dashboard") === 0) { b.style.display = "none"; if (b.parentElement) b.parentElement.setAttribute("data-lb-chips", "1"); }
       if (t === "Add a matter") {   // the "save this to your first case" prompt: matters are not available in this build
         var n = b;
         for (var i = 0; i < 5 && n.parentElement; i++) {
@@ -415,6 +421,13 @@
         }
       }
     });
+    if (location.pathname.indexOf("/editor") === 0) {   // the original editor's review tools need services this build does not have; "Check" replaces them
+      document.querySelectorAll("button").forEach(function (b) {
+        var t = (b.textContent || "").trim(), lab = (b.getAttribute("aria-label") || b.title || "");
+        if (/^(Fields|Health|Risk Review|Fix Citations)$/.test(t) || /^Draft quality/.test(t) || /^Edit with KanoonBuddy/.test(lab || t)) b.style.display = "none";
+      });
+    }
+    document.querySelectorAll("[data-lb-chips] button").forEach(function (b) { if ((b.textContent || "").trim() === "More") b.style.display = "none"; });
   }
   new MutationObserver(sweep).observe(document.documentElement, { childList: true, subtree: true });
   sweep();
