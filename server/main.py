@@ -441,6 +441,84 @@ def statute_act(act: str):
             "sections": sorted(secs, key=lambda x: section_key(x["number"]))}
 
 
+# AI Tools converter: pair id -> (old code, new code). CrPC is not in the library, so crpc-bnss has no old side.
+_CONVERTER_PAIRS = {
+    "ipc-bns": ("IPC", "BNS", "Indian Penal Code, 1860", "Bharatiya Nyaya Sanhita, 2023"),
+    "crpc-bnss": ("CRPC", "BNSS", "Code of Criminal Procedure, 1973", "Bharatiya Nagarik Suraksha Sanhita, 2023"),
+    "iea-bsa": ("IEA", "BSA", "Indian Evidence Act, 1872", "Bharatiya Sakshya Adhiniyam, 2023"),
+}
+
+
+@app.get("/api/tools/code-converter")
+def tools_code_converter(pair: str = "ipc-bns"):
+    """Old-code to new-code section list for the AI Tools converter.
+
+    Uses the same rule as the statute pages (equivalent_section): two sections are paired only when their
+    headings are identical and unique on both sides. Sections whose headings differ are left out, not guessed.
+    """
+    need("legislation")
+    if pair not in _CONVERTER_PAIRS:
+        raise HTTPException(400, "Unknown pair")
+    old, new, old_full, new_full = _CONVERTER_PAIRS[pair]
+    results = []
+    for (c, num), d in CLEAN.items():
+        if c != old:
+            continue
+        eq = equivalent_section(old, d["title"])
+        if eq:
+            results.append({"oldSection": num, "newSection": eq[1], "description": d["title"]})
+    results.sort(key=lambda r: section_key(r["oldSection"]))
+    return {"pair": {"id": pair, "from": old, "to": new, "fromFull": old_full, "toFull": new_full},
+            "results": results,
+            "basis": "sections with the same heading on both sides; check the official text"}
+
+
+_TRANSLATE_LANGS = {"en": "English", "hi": "Hindi", "mr": "Marathi", "ta": "Tamil", "te": "Telugu",
+                    "bn": "Bengali", "gu": "Gujarati", "kn": "Kannada"}
+_TRANSLATE_MAX_CHARS = 4000
+_translate_gate = threading.Semaphore(1)  # one translation at a time so the local model is not overloaded
+
+
+@app.post("/api/tools/translate")
+async def tools_translate(request: Request):
+    """AI Tools translate: legal text between English and seven Indian languages, using the local Ollama model."""
+    import httpx
+    try:
+        body = await request.json()
+    except Exception:
+        return JSONResponse({"error": "Invalid request"}, status_code=400)
+    text = str(body.get("text") or "").strip()
+    src, dst = body.get("sourceLang"), body.get("targetLang")
+    if not text:
+        return JSONResponse({"error": "Enter some text to translate."}, status_code=400)
+    if len(text) > _TRANSLATE_MAX_CHARS:
+        return JSONResponse({"error": f"Text is too long. The limit is {_TRANSLATE_MAX_CHARS} characters."}, status_code=400)
+    if src not in _TRANSLATE_LANGS or dst not in _TRANSLATE_LANGS:
+        return JSONResponse({"error": "Unsupported language."}, status_code=400)
+    if src == dst:
+        return JSONResponse({"error": "Source and target languages are the same."}, status_code=400)
+    system = (f"You translate legal text from {_TRANSLATE_LANGS[src]} to {_TRANSLATE_LANGS[dst]}. "
+              "Keep section numbers, Act names, case names, citations and Latin legal terms exactly as written. "
+              "Do not add, remove or explain anything. Output only the translation.")
+    payload = {"model": nyra.MODEL, "stream": False, "options": {"temperature": 0, "num_ctx": 8192},
+               "messages": [{"role": "system", "content": system}, {"role": "user", "content": text}]}
+
+    def run() -> str:
+        with _translate_gate:
+            r = httpx.post(f"{nyra.OLLAMA}/api/chat", json=payload, timeout=httpx.Timeout(180, connect=5))
+        r.raise_for_status()
+        return ((r.json().get("message") or {}).get("content") or "").strip()
+
+    try:
+        out = await run_in_threadpool(run)
+    except Exception:
+        logging.getLogger("lexbharat").exception("translation failed")
+        return JSONResponse({"error": "The translation model is not available right now."}, status_code=503)
+    if not out:
+        return JSONResponse({"error": "The model returned no translation. Try again."}, status_code=502)
+    return {"translated": out, "sourceLang": src, "targetLang": dst, "languages": _TRANSLATE_LANGS}
+
+
 def _equivalent_payload(code: str, title: str):
     eq = equivalent_section(code, title)
     if not eq:
