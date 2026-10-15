@@ -161,7 +161,7 @@
   function openCheck() {
     var ed = document.querySelector(".ProseMirror");
     if (!ed) return;
-    var text = ed.innerText || "";
+    var text = (ed.innerText || "").replace(/[\u00b0\u00ba]/g, " ");   // degree signs are common scan noise
     var ov = el("div", { id: "lbc-ov", role: "dialog", "aria-modal": "true", "aria-label": "Check document" });
     var box = el("div", { id: "lbc" });
     var close = function () { document.removeEventListener("keydown", esc, true); ov.remove(); };
@@ -232,6 +232,66 @@
     });
   }
 
+
+  /* ---------------------------------------------------------------- OCR follow-ups and editor hand-off */
+  function escH(t) { return t.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+  function textToHtml(t) { return t.split(/\n\s*\n/).map(function (p) { return "<p>" + escH(p.trim()).replace(/\n/g, "<br>") + "</p>"; }).filter(function (x) { return x !== "<p></p>"; }).join(""); }
+
+  function ocrQuery(text) {
+    text = text.replace(/[_\u00b0\u00ba]/g, " ");   // common scan noise
+    var cites = extractCites(text);
+    if (cites.length) return cites[0];
+    var v = /([A-Z][A-Za-z.&' ]{2,40}?)\s+(?:v\.?|vs\.?|versus)\s+([A-Z][A-Za-z.&' ]{2,40})/.exec(text);
+    if (v) return (v[1].trim() + " v. " + v[2].trim()).slice(0, 100);
+    var refs = extractRefs(text);
+    if (refs.length) return refs[0][0] + " " + refs[0][1];
+    var lines = text.split("\n").map(function (x) { return x.replace(/[^A-Za-z0-9.,'()\- ]/g, " ").replace(/\s+/g, " ").trim(); }).filter(function (x) { return x.split(" ").length >= 3; });
+    return (lines[0] || "").slice(0, 100);
+  }
+
+  function ocrActions() {
+    var on = location.pathname.indexOf("/tools") === 0;
+    var pre = on ? [].slice.call(document.querySelectorAll("pre")).filter(function (p) { return /Extracted Text/.test((p.parentElement && p.parentElement.innerText) || ""); })[0] : null;
+    var bar = document.getElementById("lbo-bar");
+    if (!pre) { if (bar) bar.remove(); return; }
+    var key = pre.textContent.slice(0, 60) + pre.textContent.length;
+    if (bar && bar.getAttribute("data-key") === key) return;
+    if (bar) bar.remove();
+    bar = el("div", { id: "lbo-bar", "data-key": key });
+    bar.style.cssText = "display:flex;flex-wrap:wrap;gap:8px;padding:10px 16px;border-bottom:1px solid #E5E7EB;background:#FAF9F7";
+    var mk = function (label, title, fn, primary) {
+      var b = el("button", { type: "button", text: label, title: title, onclick: fn });
+      b.style.cssText = "font:600 13px system-ui,sans-serif;border-radius:8px;padding:7px 12px;cursor:pointer;border:1px solid #E8742C;" + (primary ? "background:#E8742C;color:#fff" : "background:#fff;color:#a84a15");
+      return b;
+    };
+    var text = function () { return pre.textContent || ""; };
+    var q = ocrQuery(text());
+    bar.appendChild(mk("Search the library", q ? "Search Law for: " + q : "Search Law", function () { window.location.assign("/search" + (q ? "?q=" + encodeURIComponent(q) : "")); }, true));
+    bar.appendChild(mk("Open in editor", "Put this text in a new editor document so you can edit and save it", function () {
+      try { sessionStorage.setItem("lb_handoff", text()); sessionStorage.removeItem("lb_handoff_check"); } catch (e) {}
+      window.location.assign("/editor");
+    }));
+    bar.appendChild(mk("Check citations", "Open in the editor and check every section and case it cites against the library", function () {
+      try { sessionStorage.setItem("lb_handoff", text()); sessionStorage.setItem("lb_handoff_check", "1"); } catch (e) {}
+      window.location.assign("/editor");
+    }));
+    pre.parentNode.insertBefore(bar, pre);
+  }
+
+  function applyHandoff() {
+    if (location.pathname.indexOf("/editor") !== 0) return;
+    var t = null; try { t = sessionStorage.getItem("lb_handoff"); } catch (e) {}
+    var ed = document.querySelector(".ProseMirror");
+    if (!t || !ed) return;
+    try { sessionStorage.removeItem("lb_handoff"); } catch (e) {}
+    var check = false; try { check = sessionStorage.getItem("lb_handoff_check") === "1"; sessionStorage.removeItem("lb_handoff_check"); } catch (e) {}
+    setTimeout(function () {
+      ed.focus();
+      document.execCommand("insertHTML", false, textToHtml(t));
+      if (check) setTimeout(openCheck, 700);
+    }, 400);
+  }
+
   function fab() {
     // On phones the editor header hides its buttons in a menu, so the header buttons have no room: offer floating ones.
     var inEditor = location.pathname.indexOf("/editor") === 0;
@@ -250,6 +310,8 @@
 
   function addButton() {
     fab();
+    ocrActions();
+    applyHandoff();
     if (location.pathname.indexOf("/editor") !== 0 || document.getElementById("lbt-btn")) return;
     var imp = [...document.querySelectorAll("button")].find(function (b) { return (b.textContent || "").trim() === "Import" && b.getBoundingClientRect().top < 140; });
     if (!imp) return;

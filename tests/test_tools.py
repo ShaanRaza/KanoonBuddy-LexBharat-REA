@@ -54,6 +54,31 @@ class ToolsTests(unittest.TestCase):
         self.assertEqual(post({"text": "x", "sourceLang": "en", "targetLang": "zz"}).status_code, 400)
         self.assertEqual(post({"text": "a" * 4001, "sourceLang": "en", "targetLang": "hi"}).status_code, 400)
 
+    def test_ocr_reads_an_image_and_rejects_other_files(self):
+        import shutil, subprocess
+        if not (shutil.which("tesseract") and shutil.which("pdftoppm") and shutil.which("cupsfilter")):
+            self.skipTest("tesseract, poppler or cupsfilter not installed")
+        d = tempfile.mkdtemp()
+        open(f"{d}/a.txt", "w").write("IN THE SUPREME COURT OF INDIA\n\nAppeal under Section 302 of the IPC\n")
+        with open(f"{d}/a.pdf", "wb") as f:
+            subprocess.run(["cupsfilter", f"{d}/a.txt"], stdout=f, stderr=subprocess.DEVNULL)
+        subprocess.run(["pdftoppm", "-r", "100", "-png", "-f", "1", "-l", "1", f"{d}/a.pdf", f"{d}/p"], check=True)
+        png = open(f"{d}/p-1.png", "rb").read()
+        r = self.c.post("/api/tools/ocr", files={"file": ("order.png", png, "image/png")}, headers=self.h)
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertIn("SUPREME COURT", r.json()["plainText"].upper())
+        self.assertTrue(r.json()["metadata"]["isScanned"])
+        self.assertEqual(self.c.post("/api/tools/ocr", files={"file": ("x.docx", b"x", "application/octet-stream")}, headers=self.h).status_code, 422)
+        self.assertEqual(self.c.post("/api/tools/ocr", files={"file": ("x.png", b"x", "image/png")}).status_code, 401)
+
+    def test_translate_other_languages_are_refused_not_guessed(self):
+        post = lambda b: self.c.post("/api/tools/translate", json=b, headers=self.h)
+        for lang in ("mr", "ta", "te", "bn", "gu", "kn"):
+            r = post({"text": "bail", "sourceLang": "en", "targetLang": lang})
+            self.assertEqual(r.status_code, 400, lang)
+            self.assertIn("English and Hindi", r.json()["error"])
+        self.assertEqual(post({"text": "x", "sourceLang": "hi", "targetLang": "mr"}).status_code, 400)
+
     def test_public_tool_pages_go_home_but_tools_is_served(self):
         for p in ("/affidavit", "/rent-agreement", "/cause-list", "/formats"):
             self.assertEqual(self.c.get(p).status_code, 302, p)

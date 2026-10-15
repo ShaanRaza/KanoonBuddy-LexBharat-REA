@@ -489,7 +489,8 @@ def tools_code_converter(pair: str = "ipc-bns"):
 
 _TRANSLATE_LANGS = {"en": "English", "hi": "Hindi", "mr": "Marathi", "ta": "Tamil", "te": "Telugu",
                     "bn": "Bengali", "gu": "Gujarati", "kn": "Kannada"}
-_TRANSLATE_MAX_CHARS = 4000
+_TRANSLATE_MAX_CHARS = 1200   # about eight sentences: longer takes too long for the tunnel's time limit
+TRANSLATE_MODEL = os.environ.get("TRANSLATE_MODEL", "gemma3:12b")
 _translate_gate = threading.Semaphore(1)  # one translation at a time so the local model is not overloaded
 
 
@@ -511,25 +512,42 @@ async def tools_translate(request: Request):
         return JSONResponse({"error": "Unsupported language."}, status_code=400)
     if src == dst:
         return JSONResponse({"error": "Source and target languages are the same."}, status_code=400)
-    system = (f"You translate legal text from {_TRANSLATE_LANGS[src]} to {_TRANSLATE_LANGS[dst]}. "
-              "Keep section numbers, Act names, case names, citations and Latin legal terms exactly as written. "
-              "Do not add, remove or explain anything. Output only the translation.")
-    payload = {"model": nyra.MODEL, "stream": False, "options": {"temperature": 0, "num_ctx": 8192},
-               "messages": [{"role": "system", "content": system}, {"role": "user", "content": text}]}
+    from server import translate as tr
+    if src not in tr.SUPPORTED or dst not in tr.SUPPORTED or "en" not in (src, dst):
+        return JSONResponse({"error": "Only English and Hindi are available for now. Other languages are not reliable enough for legal text, "
+                                      "so they are switched off rather than risk a wrong translation."}, status_code=400)
+
+    def one(sentence: str) -> str:
+        protected, items = tr.protect(sentence)
+        last = None
+        for _ in range(2):                    # one retry, telling the model what was wrong
+            payload = {"model": TRANSLATE_MODEL, "stream": False, "keep_alive": "3m", "options": {"temperature": 0, "num_ctx": 8192},
+                       "messages": tr.build_messages(src, dst, protected, len(items), f" Your previous answer was rejected: {last}. Fix that." if last else "")}
+            for _try in range(3):             # Ollama can crash once while swapping models; a second try works
+                with _translate_gate:
+                    r = httpx.post(f"{nyra.OLLAMA}/api/chat", json=payload, timeout=httpx.Timeout(240, connect=5))
+                if r.status_code < 500:
+                    break
+                time.sleep(4)
+            r.raise_for_status()
+            out = ((r.json().get("message") or {}).get("content") or "").strip()
+            last = tr.validate(dst, out, len(items))
+            if last is None:
+                return tr.restore(out, items)
+        raise tr.TranslateError(last)
 
     def run() -> str:
-        with _translate_gate:
-            r = httpx.post(f"{nyra.OLLAMA}/api/chat", json=payload, timeout=httpx.Timeout(180, connect=5))
-        r.raise_for_status()
-        return ((r.json().get("message") or {}).get("content") or "").strip()
+        # Sentence by sentence: small models drop clauses from long sentences. Any failed sentence fails the whole translation.
+        return " ".join(one(sn) for sn in tr.split_sentences(text))
 
     try:
         out = await run_in_threadpool(run)
-    except Exception:
+    except Exception as e:
+        if e.__class__.__name__ == "TranslateError":
+            return JSONResponse({"error": "I couldn't translate this reliably, so I won't show a possibly wrong translation. "
+                                          "Try shorter sentences, or have a qualified translator do it."}, status_code=422)
         logging.getLogger("lexbharat").exception("translation failed")
         return JSONResponse({"error": "The translation model is not available right now."}, status_code=503)
-    if not out:
-        return JSONResponse({"error": "The model returned no translation. Try again."}, status_code=502)
     return {"translated": out, "sourceLang": src, "targetLang": dst, "languages": _TRANSLATE_LANGS}
 
 
@@ -1213,6 +1231,26 @@ async def templates_render(template_id: str, request: Request):
         return doc_templates.render(template_id, vals)
     except KeyError:
         raise HTTPException(404, "Unknown template")
+
+
+@app.post("/api/tools/ocr")
+async def tools_ocr(request: Request, file: UploadFile = File(...), ocrLanguage: str = Form("")):
+    """AI Tools > OCR: read text from a scanned court order, a typed document or a photo (JPG, PNG or PDF)."""
+    try:
+        auth.limiter.hit(f"ocr:{request.state.user['id']}", 8, 60)
+    except auth.AuthError:
+        return JSONResponse({"error": "Too many files at once. Wait a minute and try again."}, status_code=429)
+    name = file.filename or "upload"
+    if name.rsplit(".", 1)[-1].lower() not in ("jpg", "jpeg", "png", "pdf"):
+        return JSONResponse({"error": "Use a JPG, PNG or PDF file."}, status_code=422)
+    data = await file.read(docparse.MAX_BYTES + 1)
+    try:   # no language chosen: read English and Hindi together, which covers most Indian court papers
+        return await run_in_threadpool(docparse.parse, name, data, False, ocrLanguage or "eng+hin", False)
+    except docparse.ParseError as e:
+        return JSONResponse({"error": str(e)}, status_code=422)
+    except Exception:
+        logging.getLogger("lexbharat").exception("ocr failed")
+        return JSONResponse({"error": "This file could not be read."}, status_code=422)
 
 
 @app.post("/api/documents/parse")

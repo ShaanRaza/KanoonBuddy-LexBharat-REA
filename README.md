@@ -135,3 +135,14 @@ Legacy .doc files are not supported. Export (download as Word or PDF) is not bui
 - **Landmark summaries**: `server/landmarks.py` holds short editorial summaries of 12 landmark cases and reading notes for dense sections (BNSS 187). They are labelled as editorial, not part of the judgment. A lawyer should review them.
 - **Case page** `/case/<id>`: full judgment text (Supreme Court and High Courts), find-in-text, key-holding box for landmarks. Chat answers end with a Sources line linking to the cited sections and cases.
 - **Editor guide** `/editor-guide` is our own page. The original site's guide described features that do not exist here.
+
+## Translate and OCR (AI Tools)
+
+- **Translate** is English <-> Hindi only (`server/translate.py`). It needs a stronger local model than the chat model: `ollama pull gemma3:12b`
+  (about 8 GB; override with `TRANSLATE_MODEL`). Act names, section numbers, citations and place names are protected from rewriting, a fixed legal
+  glossary is supplied for both directions, text is translated sentence by sentence (small models drop clauses from long sentences), and any result
+  in the wrong script or missing a protected item is rejected rather than shown. Other Indian languages were tested and are switched off: the model
+  mistranslated core terms (for example "bond" became "hostage" in Tamil). Add a language only after a speaker has checked its output.
+- **OCR** (`/api/tools/ocr`) reads JPG, PNG and PDF with tesseract (English and Hindi by default). Under the extracted text: Search the library,
+  Open in editor, Check citations.
+- On a 16 GB Mac, Ollama swaps between the chat model and Gemma (about 10 seconds the first time). If Ollama crashes during a swap the server retries.

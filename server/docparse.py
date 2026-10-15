@@ -34,7 +34,7 @@ def _run(cmd, timeout=60):
 
 def _lang(code: str) -> str:
     code = (code or "eng").strip().lower()
-    if not re.fullmatch(r"[a-z]{3}(?:_[a-z]{3,4})?", code):
+    if not re.fullmatch(r"[a-z]{3}(?:_[a-z]{3,4})?(?:\+[a-z]{3}(?:_[a-z]{3,4})?){0,2}", code):
         return "eng"
     return code
 
